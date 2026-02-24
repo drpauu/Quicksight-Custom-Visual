@@ -6,20 +6,23 @@
   <title>QuickSight Custom Visual - Dashboard Replica</title>
   <style>
     :root {
-      --bg: #ececec;
-      --panel-bg: #f0f0f0;
-      --card-bg: #dfddd7;
-      --ink: #2f3287;
-      --text: #4a4a4a;
-      --muted: #6a6a6a;
-      --line: #2f3287;
+      --bg: #ededed;
+      --panel-bg: #efefef;
+      --card-bg: #dddcd6;
+      --ink: #2e3188;
+      --text: #4c4c4c;
+      --muted: #676767;
+      --line: #313286;
       --male: #312f86;
-      --female: #e781b6;
-      --ring-1: #3eb4ac;
-      --ring-2: #e77fb6;
+      --female: #e783b7;
+      --ring-1: #3fb4ac;
+      --ring-2: #e77fb5;
       --ring-3: #ff7a00;
       --ring-4: #9d9a90;
-      --ring-5: #33338f;
+      --ring-5: #33348f;
+      --kpi-border: #a8a8a3;
+      --ui-font: "Amazon Ember", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      --num-font: "Amazon Ember", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     }
 
     * {
@@ -33,7 +36,7 @@
       height: 100%;
       background: var(--bg);
       color: var(--text);
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      font-family: var(--ui-font);
     }
 
     body {
@@ -86,7 +89,7 @@
       flex: 1 1 160px;
       min-width: 0;
       background: var(--card-bg);
-      border: 1px solid #a9a9a9;
+      border: 1px solid var(--kpi-border);
       border-radius: 12px;
       padding: 8px 12px 10px;
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
@@ -98,18 +101,21 @@
 
     .kpi-title {
       margin: 0;
-      color: #666;
+      color: var(--muted);
       font-size: clamp(0.78rem, 1.15vw, 1.02rem);
       font-weight: 700;
+      font-family: var(--ui-font);
     }
 
     .kpi-value {
       margin: 8px 0 0;
-      color: #2d2d2d;
+      color: #2f2f2f;
       font-size: clamp(1.05rem, 2.7vw, 2.15rem);
       line-height: 1;
       font-weight: 700;
-      letter-spacing: 0.01em;
+      font-family: var(--num-font);
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
     }
 
     .filter-area {
@@ -177,7 +183,8 @@
       text-align: center;
       font-size: clamp(0.95rem, 1.45vw, 1.95rem);
       font-weight: 700;
-      letter-spacing: 0.01em;
+      letter-spacing: 0;
+      font-family: var(--ui-font);
     }
 
     .panel-line {
@@ -198,8 +205,9 @@
       gap: 10px;
       margin: 4px 0 2px;
       flex-wrap: wrap;
-      color: #616161;
+      color: #606060;
       font-size: clamp(0.76rem, 1.1vw, 0.98rem);
+      font-family: var(--ui-font);
     }
 
     .legend-item {
@@ -276,7 +284,7 @@
     }
 
     thead th {
-      background: #2f3287;
+      background: var(--ink);
       color: #fff;
       font-weight: 700;
       border-right: 1px solid rgba(255, 255, 255, 0.2);
@@ -294,6 +302,7 @@
       vertical-align: top;
       color: #4c4c4c;
       word-break: break-word;
+      font-family: var(--ui-font);
     }
 
     tbody tr:nth-child(even) {
@@ -315,6 +324,7 @@
     .num {
       text-align: right;
       font-variant-numeric: tabular-nums;
+      font-family: var(--num-font);
     }
 
     .center {
@@ -485,7 +495,7 @@
         donut: {
           labels: ["OD", "HUC", "HUB", "HUA", "HGU"],
           values: [1660, 1095, 991, 936, 877],
-          colors: ["#3eb4ac", "#e77fb6", "#ff7a00", "#9d9a90", "#33338f"]
+          colors: ["#3fb4ac", "#e77fb5", "#ff7a00", "#9d9a90", "#33348f"]
         },
         table: {
           totalPacientes: 5559,
@@ -698,6 +708,32 @@
         tableTotalPacientes: document.getElementById("tableTotalPacientes"),
         tableTotalMedia: document.getElementById("tableTotalMedia")
       };
+
+      var rootStyles = window.getComputedStyle(document.documentElement);
+
+      function cssVar(name, fallback) {
+        var value = rootStyles.getPropertyValue(name);
+        value = value ? String(value).trim() : "";
+        return value || fallback;
+      }
+
+      var THEME = Object.freeze({
+        ink: cssVar("--ink", "#2e3188"),
+        line: cssVar("--line", "#313286"),
+        male: cssVar("--male", "#312f86"),
+        female: cssVar("--female", "#e783b7"),
+        ring1: cssVar("--ring-1", "#3fb4ac"),
+        ring2: cssVar("--ring-2", "#e77fb5"),
+        ring3: cssVar("--ring-3", "#ff7a00"),
+        ring4: cssVar("--ring-4", "#9d9a90"),
+        ring5: cssVar("--ring-5", "#33348f"),
+        axisText: "#5d5d5d",
+        axisGrid: "#d0d0d0",
+        outLabelLine: "#b7b7b7",
+        outLabelText: "#666666",
+        uiFont: cssVar("--ui-font", "Amazon Ember, Segoe UI, Helvetica Neue, Arial, sans-serif"),
+        numFont: cssVar("--num-font", "Amazon Ember, Segoe UI, Helvetica Neue, Arial, sans-serif")
+      });
 
       // URL parameter parsing entrypoint based on window.location.search.
       function readQueryParams() {
@@ -1250,8 +1286,8 @@
             var mode = pluginOptions.mode || chart.config.type;
             var ctx = chart.ctx;
             ctx.save();
-            ctx.fillStyle = pluginOptions.color || "#5d5d5d";
-            ctx.font = pluginOptions.font || "600 12px Segoe UI";
+            ctx.fillStyle = pluginOptions.color || THEME.axisText;
+            ctx.font = pluginOptions.font || ("600 12px " + THEME.numFont);
 
             if (mode === "line") {
               var lineDataset = chart.data.datasets[0];
@@ -1304,10 +1340,10 @@
             var meta = chart.getDatasetMeta(0);
             var ctx = chart.ctx;
             ctx.save();
-            ctx.strokeStyle = pluginOptions.lineColor || "#b5b5b5";
-            ctx.fillStyle = pluginOptions.textColor || "#686868";
+            ctx.strokeStyle = pluginOptions.lineColor || THEME.outLabelLine;
+            ctx.fillStyle = pluginOptions.textColor || THEME.outLabelText;
             ctx.lineWidth = 1;
-            ctx.font = pluginOptions.font || "500 11px Segoe UI";
+            ctx.font = pluginOptions.font || ("500 11px " + THEME.uiFont);
 
             meta.data.forEach(function (arc, index) {
               var value = Number(dataset.data[index]);
@@ -1348,6 +1384,10 @@
         if (pluginsRegistered || !window.Chart) {
           return;
         }
+        window.Chart.defaults.color = THEME.axisText;
+        window.Chart.defaults.font.family = THEME.uiFont;
+        window.Chart.defaults.font.size = 12;
+        window.Chart.defaults.plugins.legend.labels.color = THEME.axisText;
         window.Chart.register(buildValueLabelPlugin(), buildDonutLabelPlugin());
         pluginsRegistered = true;
       }
@@ -1361,8 +1401,8 @@
             datasets: [
               {
                 data: config.line.values,
-                borderColor: "#2f3287",
-                backgroundColor: "#2f3287",
+                borderColor: THEME.line,
+                backgroundColor: THEME.line,
                 borderWidth: 3,
                 tension: 0,
                 pointRadius: 4,
@@ -1406,13 +1446,14 @@
             scales: {
               x: {
                 ticks: {
-                  color: "#5b5b5b",
+                  color: THEME.axisText,
                   font: {
-                    size: 12
+                    size: 12,
+                    family: THEME.uiFont
                   }
                 },
                 grid: {
-                  color: "#d0d0d0",
+                  color: THEME.axisGrid,
                   borderDash: [2, 4],
                   drawBorder: false
                 },
@@ -1439,14 +1480,14 @@
               {
                 label: "Hombre",
                 data: config.bars.first,
-                backgroundColor: "#312f86",
+                backgroundColor: THEME.male,
                 borderRadius: 0,
                 borderSkipped: false
               },
               {
                 label: "Mujer",
                 data: config.bars.second,
-                backgroundColor: "#e781b6",
+                backgroundColor: THEME.female,
                 borderRadius: 0,
                 borderSkipped: false
               }
@@ -1478,18 +1519,19 @@
               valueLabels: {
                 enabled: true,
                 mode: "bar",
-                font: "600 11px Segoe UI"
+                font: "600 11px " + THEME.numFont
               }
             },
             scales: {
               x: {
                 stacked: false,
                 ticks: {
-                  color: "#5b5b5b",
+                  color: THEME.axisText,
                   maxRotation: 0,
                   minRotation: 0,
                   font: {
-                    size: 12
+                    size: 12,
+                    family: THEME.uiFont
                   }
                 },
                 grid: {
