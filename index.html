@@ -1,19 +1,25 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>QuickSight Custom Visual URL Renderer</title>
+  <title>QuickSight Custom Visual - Dashboard Replica</title>
   <style>
     :root {
-      --bg: #f5f7fb;
-      --card: #ffffff;
-      --text: #1f2937;
-      --muted: #6b7280;
-      --primary: #0ea5e9;
-      --primary-soft: #bae6fd;
-      --border: #e5e7eb;
-      --ok: #16a34a;
+      --bg: #ececec;
+      --panel-bg: #f0f0f0;
+      --card-bg: #dfddd7;
+      --ink: #2f3287;
+      --text: #4a4a4a;
+      --muted: #6a6a6a;
+      --line: #2f3287;
+      --male: #312f86;
+      --female: #e781b6;
+      --ring-1: #3eb4ac;
+      --ring-2: #e77fb6;
+      --ring-3: #ff7a00;
+      --ring-4: #9d9a90;
+      --ring-5: #33338f;
     }
 
     * {
@@ -22,358 +28,204 @@
 
     html,
     body {
+      margin: 0;
       width: 100%;
       height: 100%;
-      margin: 0;
-    }
-
-    body {
-      display: flex;
-      background: radial-gradient(circle at 20% 10%, #eef6ff 0%, var(--bg) 55%, #eef2ff 100%);
+      background: var(--bg);
       color: var(--text);
       font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
     }
 
+    body {
+      display: flex;
+      min-height: 100vh;
+    }
+
     #app {
       flex: 1;
+      min-width: 0;
+      min-height: 0;
+      padding: clamp(6px, 1vw, 14px);
       display: flex;
-      align-items: stretch;
       justify-content: center;
-      padding: clamp(10px, 2vw, 24px);
+    }
+
+    .dashboard {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 1.2vw, 14px);
       min-width: 0;
       min-height: 0;
     }
 
-    .card {
-      width: min(100%, 980px);
+    .summary {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .top-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+
+    .kpi-row {
       flex: 1;
+      min-width: min(100%, 500px);
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .kpi-card {
+      flex: 1 1 160px;
+      min-width: 0;
+      background: var(--card-bg);
+      border: 1px solid #a9a9a9;
+      border-radius: 12px;
+      padding: 8px 12px 10px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
       display: flex;
       flex-direction: column;
       justify-content: center;
-      gap: clamp(10px, 1.6vw, 16px);
-      padding: clamp(14px, 2vw, 24px);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      background: var(--card);
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-      overflow: hidden;
+      min-height: 72px;
+    }
+
+    .kpi-title {
+      margin: 0;
+      color: #666;
+      font-size: clamp(0.78rem, 1.15vw, 1.02rem);
+      font-weight: 700;
+    }
+
+    .kpi-value {
+      margin: 8px 0 0;
+      color: #2d2d2d;
+      font-size: clamp(1.05rem, 2.7vw, 2.15rem);
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+    }
+
+    .filter-area {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+      min-width: 180px;
+      color: var(--ink);
+      font-weight: 700;
+    }
+
+    .filter-pill {
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      cursor: default;
+      padding: 0;
+      text-align: right;
+      white-space: nowrap;
+      font-size: clamp(0.8rem, 1.15vw, 1rem);
+    }
+
+    .clear-filters {
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font-size: clamp(0.78rem, 1.05vw, 0.94rem);
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0;
+      margin-top: 2px;
+      align-self: flex-end;
+    }
+
+    .clear-filters:hover {
+      opacity: 0.8;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+      grid-template-areas:
+        "line donut"
+        "bars donut";
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .panel {
+      background: var(--panel-bg);
+      border: 1.5px solid var(--ink);
+      border-radius: 22px;
+      padding: 8px 12px 10px;
+      display: flex;
+      flex-direction: column;
       min-width: 0;
       min-height: 0;
     }
 
-    .title {
-      margin: 0;
-      font-size: clamp(1rem, 1.8vw, 1.35rem);
-      color: var(--muted);
-      font-weight: 600;
-    }
-
-    .kpi {
-      margin: 0;
-      font-size: clamp(2rem, 9vw, 5.8rem);
-      line-height: 1;
-      letter-spacing: -0.02em;
+    .panel-title {
+      margin: 0 0 4px;
+      color: var(--ink);
+      text-align: center;
+      font-size: clamp(0.95rem, 1.45vw, 1.95rem);
       font-weight: 700;
-      word-break: break-word;
+      letter-spacing: 0.01em;
     }
 
-    .sub {
-      margin: 0;
-      font-size: clamp(0.95rem, 1.8vw, 1.05rem);
-      color: var(--muted);
+    .panel-line {
+      grid-area: line;
     }
 
-    .chart-wrap {
+    .panel-bars {
+      grid-area: bars;
+    }
+
+    .panel-donut {
+      grid-area: donut;
+    }
+
+    .legend-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 4px 0 2px;
+      flex-wrap: wrap;
+      color: #616161;
+      font-size: clamp(0.76rem, 1.1vw, 0.98rem);
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot-male {
+      background: var(--male);
+    }
+
+    .dot-female {
+      background: var(--female);
+    }
+
+    .canvas-wrap {
+      flex: 1;
+      min-height: 0;
       position: relative;
       width: 100%;
-      flex: 1;
-      min-height: clamp(180px, 45vh, 420px);
     }
-
-    .gauge-track {
-      width: 100%;
-      height: clamp(16px, 3vw, 28px);
-      border-radius: 999px;
-      background: #e6eef7;
-      overflow: hidden;
-      border: 1px solid #dce7f3;
-    }
-
-    .gauge-fill {
-      height: 100%;
-      width: 0;
-      background: linear-gradient(90deg, var(--ok) 0%, #22c55e 100%);
-      border-radius: inherit;
-      transition: width 260ms ease;
-    }
-
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 14px;
-      font-size: 0.95rem;
-      color: var(--muted);
-    }
-
-    .meta strong {
-      color: var(--text);
-      font-weight: 600;
-    }
-
-    .error {
-      margin: 0;
-      color: #b91c1c;
-      font-size: 0.95rem;
-    }
-
-    @media (max-width: 520px) {
-      .card {
-        border-radius: 12px;
-      }
-    }
-  </style>
-</head>
-<body>
-  <main id="app" aria-live="polite"></main>
-
-  <script>
-    (function () {
-      "use strict";
-
-      var DEFAULTS = Object.freeze({
-        modo: "indicador",
-        total: 12500,
-        porcentaje: 65
-      });
-
-      var MODOS_VALIDOS = new Set(["indicador", "barra", "gauge"]);
-      var app = document.getElementById("app");
-
-      // URL parameter parsing from window.location.search.
-      function parseQueryParams(search) {
-        var params = new URLSearchParams(search);
-        return {
-          modo: (params.get("modo") || "").toLowerCase().trim(),
-          total: params.get("total"),
-          porcentaje: params.get("porcentaje")
-        };
-      }
-
-      // Validation logic for numeric parameters:
-      // - accepts regular decimal numbers (also comma as decimal separator)
-      // - rejects NaN / Infinity / empty values
-      // - falls back to safe defaults when invalid
-      function toSafeNumber(value, fallback) {
-        if (value === null || value === undefined) {
-          return fallback;
-        }
-        var raw = String(value).trim();
-        if (!raw) {
-          return fallback;
-        }
-        var normalized = raw.replace(",", ".");
-        var parsed = Number(normalized);
-        return Number.isFinite(parsed) ? parsed : fallback;
-      }
-
-      function sanitizeInput(raw) {
-        var modo = MODOS_VALIDOS.has(raw.modo) ? raw.modo : DEFAULTS.modo;
-        var total = toSafeNumber(raw.total, DEFAULTS.total);
-        var porcentaje = toSafeNumber(raw.porcentaje, DEFAULTS.porcentaje);
-        porcentaje = Math.max(0, Math.min(100, porcentaje));
-        return { modo: modo, total: total, porcentaje: porcentaje };
-      }
-
-      function formatNumber(value) {
-        return new Intl.NumberFormat("es-ES", {
-          maximumFractionDigits: 2
-        }).format(value);
-      }
-
-      function formatPercent(value) {
-        return new Intl.NumberFormat("es-ES", {
-          minimumFractionDigits: value % 1 === 0 ? 0 : 2,
-          maximumFractionDigits: 2
-        }).format(value) + "%";
-      }
-
-      function makeCard(titleText) {
-        app.innerHTML = "";
-        var card = document.createElement("section");
-        card.className = "card";
-
-        var title = document.createElement("h1");
-        title.className = "title";
-        title.textContent = titleText;
-
-        card.appendChild(title);
-        app.appendChild(card);
-        return card;
-      }
-
-      function renderIndicador(data) {
-        var card = makeCard("Indicador KPI");
-
-        var kpi = document.createElement("p");
-        kpi.className = "kpi";
-        kpi.textContent = formatNumber(data.total);
-
-        var sub = document.createElement("p");
-        sub.className = "sub";
-        sub.textContent = "Porcentaje asociado: " + formatPercent(data.porcentaje);
-
-        card.appendChild(kpi);
-        card.appendChild(sub);
-      }
-
-      function renderGauge(data) {
-        var card = makeCard("Gauge Horizontal");
-
-        var valueText = document.createElement("p");
-        valueText.className = "kpi";
-        valueText.style.fontSize = "clamp(1.8rem, 7vw, 4.2rem)";
-        valueText.textContent = formatPercent(data.porcentaje);
-
-        var track = document.createElement("div");
-        track.className = "gauge-track";
-        track.setAttribute("role", "progressbar");
-        track.setAttribute("aria-valuemin", "0");
-        track.setAttribute("aria-valuemax", "100");
-        track.setAttribute("aria-valuenow", String(data.porcentaje));
-
-        var fill = document.createElement("div");
-        fill.className = "gauge-fill";
-        fill.style.width = data.porcentaje + "%";
-        track.appendChild(fill);
-
-        var meta = document.createElement("p");
-        meta.className = "sub";
-        meta.textContent = "Total de referencia: " + formatNumber(data.total);
-
-        card.appendChild(valueText);
-        card.appendChild(track);
-        card.appendChild(meta);
-      }
-
-      function ensureChartJs() {
-        if (window.Chart) {
-          return Promise.resolve();
-        }
-        return new Promise(function (resolve, reject) {
-          var script = document.createElement("script");
-          script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js";
-          script.async = true;
-          script.onload = function () { resolve(); };
-          script.onerror = function () { reject(new Error("No se pudo cargar Chart.js")); };
-          document.head.appendChild(script);
-        });
-      }
-
-      async function renderBar(data) {
-        var card = makeCard("Grafico de Barras");
-
-        var wrap = document.createElement("div");
-        wrap.className = "chart-wrap";
-        var canvas = document.createElement("canvas");
-        canvas.setAttribute("aria-label", "Grafico de barras dinamico");
-        canvas.setAttribute("role", "img");
-        wrap.appendChild(canvas);
-        card.appendChild(wrap);
-
-        var meta = document.createElement("div");
-        meta.className = "meta";
-
-        var totalItem = document.createElement("span");
-        var totalStrong = document.createElement("strong");
-        totalStrong.textContent = "Total: ";
-        totalItem.appendChild(totalStrong);
-        totalItem.appendChild(document.createTextNode(formatNumber(data.total)));
-
-        var pctItem = document.createElement("span");
-        var pctStrong = document.createElement("strong");
-        pctStrong.textContent = "Porcentaje: ";
-        pctItem.appendChild(pctStrong);
-        pctItem.appendChild(document.createTextNode(formatPercent(data.porcentaje)));
-
-        meta.appendChild(totalItem);
-        meta.appendChild(pctItem);
-        card.appendChild(meta);
-
-        try {
-          await ensureChartJs();
-          new window.Chart(canvas, {
-            type: "bar",
-            data: {
-              labels: ["Total", "Porcentaje"],
-              datasets: [{
-                data: [data.total, data.porcentaje],
-                backgroundColor: ["rgba(14, 165, 233, 0.85)", "rgba(34, 197, 94, 0.85)"],
-                borderColor: ["rgba(14, 165, 233, 1)", "rgba(34, 197, 94, 1)"],
-                borderWidth: 1,
-                borderRadius: 8,
-                maxBarThickness: 72
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-              animation: false,
-              plugins: {
-                legend: { display: false },
-                tooltip: {
-                  callbacks: {
-                    label: function (context) {
-                      return formatNumber(context.parsed.y);
-                    }
-                  }
-                }
-              },
-              scales: {
-                x: {
-                  grid: { display: false },
-                  ticks: { color: "#374151" }
-                },
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    color: "#374151",
-                    callback: function (value) {
-                      return formatNumber(value);
-                    }
-                  }
-                }
-              }
-            }
-          });
-        } catch (error) {
-          var err = document.createElement("p");
-          err.className = "error";
-          err.textContent = "Error cargando Chart.js. Verifica conectividad al CDN.";
-          card.appendChild(err);
-        }
-      }
-
-      async function init() {
-        var raw = parseQueryParams(window.location.search);
-        var data = sanitizeInput(raw);
-
-        // Render switching logic based on validated "modo".
-        switch (data.modo) {
-          case "barra":
-            await renderBar(data);
-            break;
-          case "gauge":
-            renderGauge(data);
-            break;
-          case "indicador":
-          default:
-            renderIndicador(data);
-            break;
-        }
-      }
-
-      init();
-    })();
-  </script>
-</body>
-</html>
