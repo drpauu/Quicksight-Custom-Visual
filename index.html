@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8">
@@ -229,3 +229,1403 @@
       position: relative;
       width: 100%;
     }
+    .panel-line .canvas-wrap {
+      height: clamp(190px, 30vh, 300px);
+    }
+
+    .panel-bars .canvas-wrap {
+      height: clamp(170px, 26vh, 260px);
+    }
+
+    .panel-donut .canvas-wrap {
+      height: clamp(360px, 60vh, 600px);
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+      display: block;
+    }
+
+    .chart-error {
+      margin: 0;
+      color: #8b1d1d;
+      font-size: 0.95rem;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .table-section {
+      width: 100%;
+      min-width: 0;
+      background: transparent;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border-top: 1px solid #ced0d8;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1200px;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: clamp(0.78rem, 1.06vw, 0.99rem);
+      background: #f8f8f8;
+    }
+
+    thead th {
+      background: #2f3287;
+      color: #fff;
+      font-weight: 700;
+      border-right: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 7px 6px;
+      text-align: center;
+      vertical-align: top;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    tbody td {
+      padding: 6px 6px;
+      border-bottom: 1px solid #e6e6e6;
+      vertical-align: top;
+      color: #4c4c4c;
+      word-break: break-word;
+    }
+
+    tbody tr:nth-child(even) {
+      background: #efefef;
+    }
+
+    tbody tr:nth-child(odd) {
+      background: #f8f8f8;
+    }
+
+    tfoot td {
+      border-top: 1px solid #353992;
+      padding: 6px 6px;
+      font-weight: 700;
+      background: #f7f7f7;
+      color: #222;
+    }
+
+    .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    .total-label {
+      text-align: left;
+      padding-left: 62px;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1200px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+          "line"
+          "bars"
+          "donut";
+      }
+
+      .panel-donut .canvas-wrap {
+        height: clamp(280px, 42vh, 420px);
+      }
+    }
+
+    @media (max-width: 680px) {
+      .kpi-row {
+        min-width: 0;
+      }
+
+      .kpi-card {
+        flex: 1 1 100%;
+      }
+
+      .filter-area {
+        width: 100%;
+        align-items: flex-start;
+      }
+
+      .filter-pill,
+      .clear-filters {
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="app">
+    <div class="dashboard">
+      <section id="summarySection" class="summary">
+        <div class="top-row">
+          <div class="kpi-row">
+            <article class="kpi-card">
+              <p class="kpi-title">Numero de Pacientes</p>
+              <p class="kpi-value" id="kpiPacientes">0</p>
+            </article>
+            <article class="kpi-card">
+              <p class="kpi-title">Numero de Exitos</p>
+              <p class="kpi-value" id="kpiExitos">0</p>
+            </article>
+            <article class="kpi-card">
+              <p class="kpi-title">Numero de Protocolos</p>
+              <p class="kpi-value" id="kpiProtocolos">0</p>
+            </article>
+          </div>
+
+          <div class="filter-area">
+            <button id="filtroGenetica" class="filter-pill" type="button">Info Genetica v</button>
+            <button id="filtroAdicional" class="filter-pill" type="button">Info Adicional v</button>
+            <button id="btnClearFilters" class="clear-filters" type="button">Borrar filtros</button>
+          </div>
+        </div>
+
+        <div class="charts-grid">
+          <section class="panel panel-line">
+            <h2 class="panel-title">Numero de pacientes que inician el tratamiento cada anio</h2>
+            <div class="canvas-wrap">
+              <canvas id="lineChart" aria-label="Grafico de linea por anio" role="img"></canvas>
+            </div>
+          </section>
+
+          <section class="panel panel-donut">
+            <h2 class="panel-title">Numero de pacientes tratados por hospital</h2>
+            <div class="canvas-wrap">
+              <canvas id="donutChart" aria-label="Grafico donut por hospital" role="img"></canvas>
+            </div>
+          </section>
+
+          <section class="panel panel-bars">
+            <h2 class="panel-title">Numero de pacientes por edad y sexo</h2>
+            <div class="legend-row">
+              <span class="legend-item"><span class="dot dot-male"></span>Hombre</span>
+              <span class="legend-item"><span class="dot dot-female"></span>Mujer</span>
+            </div>
+            <div class="canvas-wrap">
+              <canvas id="barChart" aria-label="Grafico de barras por edad y sexo" role="img"></canvas>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <section id="tableSection" class="table-section">
+        <div class="table-wrap">
+          <table aria-label="Tabla de protocolos y pacientes">
+            <thead>
+              <tr>
+                <th style="width: 96px;">Codigo<br>Diagnostico</th>
+                <th style="width: 98px;">Diagnostico</th>
+                <th style="width: 88px;">Codigo<br>Indicacion</th>
+                <th style="width: 152px;">Indicacion</th>
+                <th style="width: 94px;">Codigo<br>Protocolo</th>
+                <th style="width: 220px;">Protocolo</th>
+                <th style="width: 78px;">Siglas<br>Hospital</th>
+                <th style="width: 56px;">Sexo</th>
+                <th style="width: 78px;">Edad</th>
+                <th style="width: 96px;">Numero de<br>pacientes</th>
+                <th style="width: 138px;">Media de meses de supervivencia global</th>
+              </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+            <tfoot>
+              <tr>
+                <td class="total-label" colspan="9">Total</td>
+                <td id="tableTotalPacientes" class="num">0</td>
+                <td id="tableTotalMedia" class="num">0,00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /*
+       * Defaults based on the reference images.
+       * Every value can be replaced from URL query parameters.
+       */
+      var DEFAULTS = {
+        vista: "completo",
+        kpi: {
+          pacientes: 5559,
+          exitos: 3350,
+          protocolos: 240
+        },
+        filters: {
+          genetica: "Info Genetica",
+          geneticaValor: "",
+          adicional: "Info Adicional",
+          adicionalValor: ""
+        },
+        line: {
+          labels: ["2019", "2020", "2021", "2022", "2023", "2024", "2025"],
+          values: [459, 778, 910, 991, 939, 983, 519]
+        },
+        bars: {
+          labels: ["Menos de 50 anios", "50-59 anios", "60-69 anios", "70-79 anios", "Mas de 80 anios"],
+          hombre: [140, 563, 1351, 1285, 247],
+          mujer: [72, 395, 925, 475, 106]
+        },
+        donut: {
+          labels: ["OD", "HUC", "HUB", "HUA", "HGU"],
+          values: [1660, 1095, 991, 936, 877],
+          colors: ["#3eb4ac", "#e77fb6", "#ff7a00", "#9d9a90", "#33338f"]
+        },
+        table: {
+          totalPacientes: 5559,
+          mediaSupervivenciaGlobal: 13.82,
+          rows: [
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2429",
+              indicacion: "Adyuvante",
+              codProtocolo: "7802",
+              protocolo: "",
+              siglasHospital: "HUB",
+              sexo: "Mujer",
+              edad: "70-79 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 0.0
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "7761",
+              protocolo: "",
+              siglasHospital: "HUA",
+              sexo: "Hombre",
+              edad: "60-69 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 0.13
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "7770",
+              protocolo: "",
+              siglasHospital: "HUA",
+              sexo: "Mujer",
+              edad: "60-69 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 0.27
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "127",
+              indicacion: "Enf. metastasica 3a linea",
+              codProtocolo: "7422",
+              protocolo: "AE DATOPOTAMAB DERUXTECAN",
+              siglasHospital: "HUC",
+              sexo: "Mujer",
+              edad: "Menos de 50 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 6.5
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "967",
+              protocolo: "AFATINIB",
+              siglasHospital: "HGU",
+              sexo: "Hombre",
+              edad: "60-69 anios",
+              numeroPacientes: 2,
+              mediaMesesSupervivencia: 20.02
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "967",
+              protocolo: "AFATINIB",
+              siglasHospital: "HGU",
+              sexo: "Hombre",
+              edad: "70-79 anios",
+              numeroPacientes: 2,
+              mediaMesesSupervivencia: 29.88
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "967",
+              protocolo: "AFATINIB",
+              siglasHospital: "HGU",
+              sexo: "Mujer",
+              edad: "70-79 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 1.87
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "967",
+              protocolo: "AFATINIB",
+              siglasHospital: "HUA",
+              sexo: "Hombre",
+              edad: "60-69 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 0.37
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "967",
+              protocolo: "AFATINIB",
+              siglasHospital: "HUA",
+              sexo: "Mujer",
+              edad: "50-59 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 73.2
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "967",
+              protocolo: "AFATINIB",
+              siglasHospital: "HUB",
+              sexo: "Hombre",
+              edad: "50-59 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 42.67
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "967",
+              protocolo: "AFATINIB",
+              siglasHospital: "HUB",
+              sexo: "Mujer",
+              edad: "50-59 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 3.9
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "967",
+              protocolo: "AFATINIB",
+              siglasHospital: "HUB",
+              sexo: "Mujer",
+              edad: "Mas de 80 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 69.53
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "967",
+              protocolo: "AFATINIB",
+              siglasHospital: "HUB",
+              sexo: "Mujer",
+              edad: "Menos de 50 anios",
+              numeroPacientes: 1,
+              mediaMesesSupervivencia: 25.77
+            },
+            {
+              codDiagnostico: "107",
+              diagnostico: "No microcitico",
+              codIndicacion: "2430",
+              indicacion: "Enf. metastasica 1a linea",
+              codProtocolo: "967",
+              protocolo: "AFATINIB",
+              siglasHospital: "HUC",
+              sexo: "Mujer",
+              edad: "60-69 anios",
+              numeroPacientes: 2,
+              mediaMesesSupervivencia: 4.53
+            }
+          ]
+        }
+      };
+
+      var VALID_VIEWS = new Set(["completo", "dashboard", "tabla"]);
+      var chartInstances = {
+        line: null,
+        bars: null,
+        donut: null
+      };
+      var pluginsRegistered = false;
+
+      var dom = {
+        summarySection: document.getElementById("summarySection"),
+        tableSection: document.getElementById("tableSection"),
+        kpiPacientes: document.getElementById("kpiPacientes"),
+        kpiExitos: document.getElementById("kpiExitos"),
+        kpiProtocolos: document.getElementById("kpiProtocolos"),
+        filtroGenetica: document.getElementById("filtroGenetica"),
+        filtroAdicional: document.getElementById("filtroAdicional"),
+        btnClearFilters: document.getElementById("btnClearFilters"),
+        tableBody: document.getElementById("tableBody"),
+        tableTotalPacientes: document.getElementById("tableTotalPacientes"),
+        tableTotalMedia: document.getElementById("tableTotalMedia")
+      };
+
+      // URL parameter parsing entrypoint based on window.location.search.
+      function readQueryParams() {
+        return new URLSearchParams(window.location.search);
+      }
+
+      // Numeric validation:
+      // - accepts "1234", "1,5", "1.5", "5.559,2"
+      // - rejects non-finite values and unsafe strings
+      // - returns fallback for invalid data
+      function toSafeNumber(input, fallback) {
+        if (input === null || input === undefined) {
+          return fallback;
+        }
+        var raw = String(input).trim();
+        if (!raw) {
+          return fallback;
+        }
+
+        var compact = raw.replace(/\s+/g, "");
+        if (!/^[+-]?[\d.,]+$/.test(compact)) {
+          return fallback;
+        }
+
+        var normalized = compact;
+        var lastComma = normalized.lastIndexOf(",");
+        var lastDot = normalized.lastIndexOf(".");
+
+        if (lastComma > -1 && lastDot > -1) {
+          if (lastComma > lastDot) {
+            normalized = normalized.replace(/\./g, "").replace(",", ".");
+          } else {
+            normalized = normalized.replace(/,/g, "");
+          }
+        } else if (lastComma > -1) {
+          normalized = normalized.replace(",", ".");
+        }
+
+        var parsed = Number(normalized);
+        return Number.isFinite(parsed) ? parsed : fallback;
+      }
+
+      function toOptionalNumber(params, key) {
+        if (!params.has(key)) {
+          return null;
+        }
+        var parsed = toSafeNumber(params.get(key), Number.NaN);
+        return Number.isFinite(parsed) ? parsed : null;
+      }
+
+      function normalizeText(input, fallback) {
+        if (input === null || input === undefined) {
+          return fallback;
+        }
+        var value = String(input).replace(/\s+/g, " ").trim();
+        return value || fallback;
+      }
+
+      function readTextParam(params, key, fallback) {
+        if (!params.has(key)) {
+          return fallback;
+        }
+        return normalizeText(params.get(key), fallback);
+      }
+
+      function readBooleanParam(params, key, fallback) {
+        if (!params.has(key)) {
+          return fallback;
+        }
+        var normalized = String(params.get(key)).trim().toLowerCase();
+        if (normalized === "1" || normalized === "true" || normalized === "si" || normalized === "yes") {
+          return true;
+        }
+        if (normalized === "0" || normalized === "false" || normalized === "no") {
+          return false;
+        }
+        return fallback;
+      }
+
+      function parseList(raw) {
+        if (raw === null || raw === undefined) {
+          return [];
+        }
+
+        var text = String(raw).trim();
+        if (!text) {
+          return [];
+        }
+
+        try {
+          var parsedJson = JSON.parse(text);
+          if (Array.isArray(parsedJson)) {
+            return parsedJson;
+          }
+        } catch (errorA) {
+          // Ignore and continue with other formats.
+        }
+
+        try {
+          var decoded = atob(text);
+          var parsedBase64 = JSON.parse(decoded);
+          if (Array.isArray(parsedBase64)) {
+            return parsedBase64;
+          }
+        } catch (errorB) {
+          // Ignore and continue with delimited list parsing.
+        }
+
+        var delimiter = ",";
+        if (text.indexOf("|") > -1) {
+          delimiter = "|";
+        } else if (text.indexOf(";") > -1) {
+          delimiter = ";";
+        }
+        return text.split(delimiter);
+      }
+
+      function readTextList(params, key, fallback) {
+        if (!params.has(key)) {
+          return fallback.slice();
+        }
+        var values = parseList(params.get(key))
+          .map(function (item) {
+            return normalizeText(item, "");
+          })
+          .filter(function (item) {
+            return item.length > 0;
+          });
+        return values.length ? values : fallback.slice();
+      }
+
+      function readNumberList(params, key, fallback) {
+        if (!params.has(key)) {
+          return fallback.slice();
+        }
+        var rawValues = parseList(params.get(key));
+        if (!rawValues.length) {
+          return fallback.slice();
+        }
+
+        var result = [];
+        for (var i = 0; i < rawValues.length; i += 1) {
+          var value = toSafeNumber(rawValues[i], Number.NaN);
+          if (!Number.isFinite(value)) {
+            return fallback.slice();
+          }
+          result.push(value);
+        }
+        return result;
+      }
+
+      function normalizeSingleSeries(labels, values, fallbackLabels, fallbackValues, minLen) {
+        var size = Math.min(labels.length, values.length);
+        if (size < minLen) {
+          return {
+            labels: fallbackLabels.slice(),
+            values: fallbackValues.slice()
+          };
+        }
+        return {
+          labels: labels.slice(0, size),
+          values: values.slice(0, size)
+        };
+      }
+
+      function normalizeGroupedSeries(labels, first, second, fallback) {
+        var size = Math.min(labels.length, first.length, second.length);
+        if (size < 1) {
+          return {
+            labels: fallback.labels.slice(),
+            first: fallback.hombre.slice(),
+            second: fallback.mujer.slice()
+          };
+        }
+        return {
+          labels: labels.slice(0, size),
+          first: first.slice(0, size),
+          second: second.slice(0, size)
+        };
+      }
+
+      function normalizeColorList(labels, colors, fallbackColors) {
+        var cleaned = colors
+          .map(function (color) {
+            return String(color).trim();
+          })
+          .filter(function (color) {
+            return /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(color);
+          });
+
+        if (!cleaned.length) {
+          cleaned = fallbackColors.slice();
+        }
+
+        var output = [];
+        for (var i = 0; i < labels.length; i += 1) {
+          output.push(cleaned[i % cleaned.length]);
+        }
+        return output;
+      }
+
+      function pickFirst(obj, keys, fallback) {
+        for (var i = 0; i < keys.length; i += 1) {
+          var value = obj[keys[i]];
+          if (value !== null && value !== undefined) {
+            return value;
+          }
+        }
+        return fallback;
+      }
+
+      function sanitizeRows(rows) {
+        if (!Array.isArray(rows)) {
+          return null;
+        }
+
+        var normalized = [];
+        for (var i = 0; i < rows.length; i += 1) {
+          var row = rows[i];
+          if (!row || typeof row !== "object") {
+            continue;
+          }
+
+          normalized.push({
+            codDiagnostico: normalizeText(pickFirst(row, ["codDiagnostico", "codigoDiagnostico", "cod_diagnostico"], ""), ""),
+            diagnostico: normalizeText(pickFirst(row, ["diagnostico"], ""), ""),
+            codIndicacion: normalizeText(pickFirst(row, ["codIndicacion", "codigoIndicacion", "cod_indicacion"], ""), ""),
+            indicacion: normalizeText(pickFirst(row, ["indicacion"], ""), ""),
+            codProtocolo: normalizeText(pickFirst(row, ["codProtocolo", "codigoProtocolo", "cod_protocolo"], ""), ""),
+            protocolo: normalizeText(pickFirst(row, ["protocolo"], ""), ""),
+            siglasHospital: normalizeText(pickFirst(row, ["siglasHospital", "hospital", "siglas_hospital"], ""), ""),
+            sexo: normalizeText(pickFirst(row, ["sexo"], ""), ""),
+            edad: normalizeText(pickFirst(row, ["edad"], ""), ""),
+            numeroPacientes: toSafeNumber(pickFirst(row, ["numeroPacientes", "numPacientes", "numero_pacientes"], 0), 0),
+            mediaMesesSupervivencia: toSafeNumber(pickFirst(row, ["mediaMesesSupervivencia", "mediaSupervivencia", "media_meses_supervivencia"], 0), 0)
+          });
+        }
+
+        return normalized.length ? normalized : null;
+      }
+
+      function readRowsFromJsonParam(params) {
+        if (!params.has("tabla_rows")) {
+          return null;
+        }
+
+        var raw = params.get("tabla_rows");
+        if (!raw) {
+          return null;
+        }
+
+        try {
+          var jsonRows = JSON.parse(raw);
+          return sanitizeRows(jsonRows);
+        } catch (errorA) {
+          // Keep trying with base64.
+        }
+
+        try {
+          var decoded = atob(raw);
+          var decodedRows = JSON.parse(decoded);
+          return sanitizeRows(decodedRows);
+        } catch (errorB) {
+          return null;
+        }
+      }
+
+      function readRowsFromColumnParams(params) {
+        var map = {
+          codDiagnostico: "tabla_cod_diagnostico",
+          diagnostico: "tabla_diagnostico",
+          codIndicacion: "tabla_cod_indicacion",
+          indicacion: "tabla_indicacion",
+          codProtocolo: "tabla_cod_protocolo",
+          protocolo: "tabla_protocolo",
+          siglasHospital: "tabla_siglas_hospital",
+          sexo: "tabla_sexo",
+          edad: "tabla_edad",
+          numeroPacientes: "tabla_num_pacientes",
+          mediaMesesSupervivencia: "tabla_media_meses"
+        };
+
+        var hasAnyColumn = false;
+        var columns = {};
+        var maxLen = 0;
+
+        var keys = Object.keys(map);
+        for (var i = 0; i < keys.length; i += 1) {
+          var field = keys[i];
+          var paramName = map[field];
+
+          if (!params.has(paramName)) {
+            columns[field] = [];
+            continue;
+          }
+
+          hasAnyColumn = true;
+          if (field === "numeroPacientes" || field === "mediaMesesSupervivencia") {
+            columns[field] = readNumberList(params, paramName, []);
+          } else {
+            columns[field] = readTextList(params, paramName, []);
+          }
+          maxLen = Math.max(maxLen, columns[field].length);
+        }
+
+        if (!hasAnyColumn || maxLen === 0) {
+          return null;
+        }
+
+        var rows = [];
+        for (var index = 0; index < maxLen; index += 1) {
+          rows.push({
+            codDiagnostico: columns.codDiagnostico[index] || "",
+            diagnostico: columns.diagnostico[index] || "",
+            codIndicacion: columns.codIndicacion[index] || "",
+            indicacion: columns.indicacion[index] || "",
+            codProtocolo: columns.codProtocolo[index] || "",
+            protocolo: columns.protocolo[index] || "",
+            siglasHospital: columns.siglasHospital[index] || "",
+            sexo: columns.sexo[index] || "",
+            edad: columns.edad[index] || "",
+            numeroPacientes: Number.isFinite(columns.numeroPacientes[index]) ? columns.numeroPacientes[index] : 0,
+            mediaMesesSupervivencia: Number.isFinite(columns.mediaMesesSupervivencia[index]) ? columns.mediaMesesSupervivencia[index] : 0
+          });
+        }
+
+        return sanitizeRows(rows);
+      }
+
+      function weightedAverage(rows) {
+        var weightedSum = 0;
+        var weight = 0;
+        for (var i = 0; i < rows.length; i += 1) {
+          var count = Number(rows[i].numeroPacientes) || 0;
+          var avg = Number(rows[i].mediaMesesSupervivencia) || 0;
+          weightedSum += count * avg;
+          weight += count;
+        }
+        if (weight === 0) {
+          return 0;
+        }
+        return weightedSum / weight;
+      }
+
+      function buildConfigFromQuery(params) {
+        var view = readTextParam(params, "vista", DEFAULTS.vista).toLowerCase();
+        if (!VALID_VIEWS.has(view)) {
+          view = DEFAULTS.vista;
+        }
+
+        var lineLabels = readTextList(params, "line_anios", DEFAULTS.line.labels);
+        var lineValues = readNumberList(params, "line_valores", DEFAULTS.line.values);
+        var lineSeries = normalizeSingleSeries(
+          lineLabels,
+          lineValues,
+          DEFAULTS.line.labels,
+          DEFAULTS.line.values,
+          2
+        );
+
+        var barLabels = readTextList(params, "edad_labels", DEFAULTS.bars.labels);
+        var barHombre = readNumberList(params, "edad_hombres", DEFAULTS.bars.hombre);
+        var barMujer = readNumberList(params, "edad_mujeres", DEFAULTS.bars.mujer);
+        var barSeries = normalizeGroupedSeries(barLabels, barHombre, barMujer, DEFAULTS.bars);
+
+        var donutLabels = readTextList(params, "hospital_labels", DEFAULTS.donut.labels);
+        var donutValues = readNumberList(params, "hospital_valores", DEFAULTS.donut.values);
+        var donutSeries = normalizeSingleSeries(
+          donutLabels,
+          donutValues,
+          DEFAULTS.donut.labels,
+          DEFAULTS.donut.values,
+          1
+        );
+        var donutColors = normalizeColorList(
+          donutSeries.labels,
+          readTextList(params, "hospital_colores", DEFAULTS.donut.colors),
+          DEFAULTS.donut.colors
+        );
+
+        var tableRows = readRowsFromJsonParam(params) || readRowsFromColumnParams(params) || DEFAULTS.table.rows.slice();
+        var autoTableTotals = readBooleanParam(params, "auto_totales_tabla", false);
+
+        var tableTotalPacientesParam = toOptionalNumber(params, "tabla_total_pacientes");
+        var tableMediaParam = toOptionalNumber(params, "tabla_media_supervivencia_global");
+
+        var tableTotalPacientes = tableTotalPacientesParam;
+        var tableMedia = tableMediaParam;
+
+        if (autoTableTotals) {
+          if (tableTotalPacientes === null) {
+            tableTotalPacientes = tableRows.reduce(function (sum, row) {
+              return sum + (Number(row.numeroPacientes) || 0);
+            }, 0);
+          }
+          if (tableMedia === null) {
+            tableMedia = weightedAverage(tableRows);
+          }
+        }
+
+        if (tableTotalPacientes === null) {
+          tableTotalPacientes = DEFAULTS.table.totalPacientes;
+        }
+        if (tableMedia === null) {
+          tableMedia = DEFAULTS.table.mediaSupervivenciaGlobal;
+        }
+
+        return {
+          vista: view,
+          kpi: {
+            pacientes: toSafeNumber(readTextParam(params, "num_pacientes", DEFAULTS.kpi.pacientes), DEFAULTS.kpi.pacientes),
+            exitos: toSafeNumber(readTextParam(params, "num_exitos", DEFAULTS.kpi.exitos), DEFAULTS.kpi.exitos),
+            protocolos: toSafeNumber(readTextParam(params, "num_protocolos", DEFAULTS.kpi.protocolos), DEFAULTS.kpi.protocolos)
+          },
+          filters: {
+            genetica: readTextParam(params, "filtro_genetica", DEFAULTS.filters.genetica),
+            geneticaValor: readTextParam(params, "filtro_genetica_valor", DEFAULTS.filters.geneticaValor),
+            adicional: readTextParam(params, "filtro_adicional", DEFAULTS.filters.adicional),
+            adicionalValor: readTextParam(params, "filtro_adicional_valor", DEFAULTS.filters.adicionalValor)
+          },
+          line: lineSeries,
+          bars: barSeries,
+          donut: {
+            labels: donutSeries.labels,
+            values: donutSeries.values,
+            colors: donutColors
+          },
+          table: {
+            rows: tableRows,
+            totalPacientes: tableTotalPacientes,
+            mediaSupervivenciaGlobal: tableMedia
+          }
+        };
+      }
+
+      function formatInteger(value) {
+        return new Intl.NumberFormat("es-ES", {
+          maximumFractionDigits: 0
+        }).format(value);
+      }
+
+      function formatDecimal(value) {
+        return new Intl.NumberFormat("es-ES", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        }).format(value);
+      }
+
+      function formatPercent(value) {
+        return new Intl.NumberFormat("es-ES", {
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1
+        }).format(value);
+      }
+
+      function createCell(text, className) {
+        var td = document.createElement("td");
+        td.textContent = text;
+        if (className) {
+          td.className = className;
+        }
+        return td;
+      }
+
+      function renderKpis(config) {
+        dom.kpiPacientes.textContent = formatInteger(config.kpi.pacientes);
+        dom.kpiExitos.textContent = formatInteger(config.kpi.exitos);
+        dom.kpiProtocolos.textContent = formatInteger(config.kpi.protocolos);
+      }
+
+      function renderFilterPills(config) {
+        var geneticaText = config.filters.genetica + " v";
+        var adicionalText = config.filters.adicional + " v";
+
+        if (config.filters.geneticaValor) {
+          geneticaText += " " + config.filters.geneticaValor;
+        }
+        if (config.filters.adicionalValor) {
+          adicionalText += " " + config.filters.adicionalValor;
+        }
+
+        dom.filtroGenetica.textContent = geneticaText;
+        dom.filtroAdicional.textContent = adicionalText;
+      }
+
+      function renderTable(config) {
+        while (dom.tableBody.firstChild) {
+          dom.tableBody.removeChild(dom.tableBody.firstChild);
+        }
+
+        for (var i = 0; i < config.table.rows.length; i += 1) {
+          var row = config.table.rows[i];
+          var tr = document.createElement("tr");
+
+          tr.appendChild(createCell(row.codDiagnostico, "num"));
+          tr.appendChild(createCell(row.diagnostico));
+          tr.appendChild(createCell(row.codIndicacion, "num"));
+          tr.appendChild(createCell(row.indicacion));
+          tr.appendChild(createCell(row.codProtocolo, "num"));
+          tr.appendChild(createCell(row.protocolo));
+          tr.appendChild(createCell(row.siglasHospital, "center"));
+          tr.appendChild(createCell(row.sexo));
+          tr.appendChild(createCell(row.edad));
+          tr.appendChild(createCell(formatInteger(row.numeroPacientes), "num"));
+          tr.appendChild(createCell(formatDecimal(row.mediaMesesSupervivencia), "num"));
+
+          dom.tableBody.appendChild(tr);
+        }
+
+        dom.tableTotalPacientes.textContent = formatInteger(config.table.totalPacientes);
+        dom.tableTotalMedia.textContent = formatDecimal(config.table.mediaSupervivenciaGlobal);
+      }
+
+      function destroyCharts() {
+        if (chartInstances.line) {
+          chartInstances.line.destroy();
+          chartInstances.line = null;
+        }
+        if (chartInstances.bars) {
+          chartInstances.bars.destroy();
+          chartInstances.bars = null;
+        }
+        if (chartInstances.donut) {
+          chartInstances.donut.destroy();
+          chartInstances.donut = null;
+        }
+      }
+
+      function showChartError(canvasId, message) {
+        var canvas = document.getElementById(canvasId);
+        if (!canvas) {
+          return;
+        }
+        var wrapper = canvas.parentElement;
+        canvas.remove();
+        var text = document.createElement("p");
+        text.className = "chart-error";
+        text.textContent = message;
+        wrapper.appendChild(text);
+      }
+
+      function buildValueLabelPlugin() {
+        return {
+          id: "valueLabels",
+          afterDatasetsDraw: function (chart, args, pluginOptions) {
+            if (!pluginOptions || pluginOptions.enabled === false) {
+              return;
+            }
+
+            var mode = pluginOptions.mode || chart.config.type;
+            var ctx = chart.ctx;
+            ctx.save();
+            ctx.fillStyle = pluginOptions.color || "#5d5d5d";
+            ctx.font = pluginOptions.font || "600 12px Segoe UI";
+
+            if (mode === "line") {
+              var lineDataset = chart.data.datasets[0];
+              var lineMeta = chart.getDatasetMeta(0);
+              lineMeta.data.forEach(function (point, index) {
+                var value = lineDataset.data[index];
+                var offset = (index === 0 || index === lineDataset.data.length - 1) ? 18 : -14;
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(formatInteger(value), point.x, point.y + offset);
+              });
+            }
+
+            if (mode === "bar") {
+              chart.data.datasets.forEach(function (dataset, datasetIndex) {
+                var barsMeta = chart.getDatasetMeta(datasetIndex);
+                barsMeta.data.forEach(function (bar, dataIndex) {
+                  var value = dataset.data[dataIndex];
+                  ctx.textAlign = "center";
+                  ctx.textBaseline = "middle";
+                  ctx.fillText(formatInteger(value), bar.x, bar.y - 10);
+                });
+              });
+            }
+
+            ctx.restore();
+          }
+        };
+      }
+
+      function buildDonutLabelPlugin() {
+        return {
+          id: "donutOutLabels",
+          afterDatasetDraw: function (chart, args, pluginOptions) {
+            if (!pluginOptions || pluginOptions.enabled === false) {
+              return;
+            }
+            if (chart.config.type !== "doughnut") {
+              return;
+            }
+
+            var dataset = chart.data.datasets[0];
+            var total = dataset.data.reduce(function (sum, value) {
+              return sum + value;
+            }, 0);
+            if (total <= 0) {
+              return;
+            }
+
+            var meta = chart.getDatasetMeta(0);
+            var ctx = chart.ctx;
+            ctx.save();
+            ctx.strokeStyle = pluginOptions.lineColor || "#b5b5b5";
+            ctx.fillStyle = pluginOptions.textColor || "#686868";
+            ctx.lineWidth = 1;
+            ctx.font = pluginOptions.font || "500 11px Segoe UI";
+
+            meta.data.forEach(function (arc, index) {
+              var value = Number(dataset.data[index]);
+              if (!Number.isFinite(value) || value <= 0) {
+                return;
+              }
+
+              var midAngle = (arc.startAngle + arc.endAngle) / 2;
+              var cx = arc.x;
+              var cy = arc.y;
+              var x1 = cx + Math.cos(midAngle) * (arc.outerRadius + 4);
+              var y1 = cy + Math.sin(midAngle) * (arc.outerRadius + 4);
+              var x2 = cx + Math.cos(midAngle) * (arc.outerRadius + 18);
+              var y2 = cy + Math.sin(midAngle) * (arc.outerRadius + 18);
+              var rightSide = Math.cos(midAngle) >= 0;
+              var x3 = x2 + (rightSide ? 12 : -12);
+
+              ctx.beginPath();
+              ctx.moveTo(x1, y1);
+              ctx.lineTo(x2, y2);
+              ctx.lineTo(x3, y2);
+              ctx.stroke();
+
+              var percent = (value / total) * 100;
+              var label = chart.data.labels[index] + " " + formatInteger(value) + " (" + formatPercent(percent) + "%)";
+
+              ctx.textAlign = rightSide ? "left" : "right";
+              ctx.textBaseline = "middle";
+              ctx.fillText(label, x3 + (rightSide ? 3 : -3), y2);
+            });
+
+            ctx.restore();
+          }
+        };
+      }
+
+      function registerPlugins() {
+        if (pluginsRegistered || !window.Chart) {
+          return;
+        }
+        window.Chart.register(buildValueLabelPlugin(), buildDonutLabelPlugin());
+        pluginsRegistered = true;
+      }
+
+      function buildLineChart(config) {
+        var canvas = document.getElementById("lineChart");
+        chartInstances.line = new window.Chart(canvas, {
+          type: "line",
+          data: {
+            labels: config.line.labels,
+            datasets: [
+              {
+                data: config.line.values,
+                borderColor: "#2f3287",
+                backgroundColor: "#2f3287",
+                borderWidth: 3,
+                tension: 0,
+                pointRadius: 4,
+                pointHoverRadius: 5,
+                pointStyle: "rect"
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            interaction: {
+              mode: "nearest",
+              intersect: false
+            },
+            layout: {
+              padding: {
+                top: 8,
+                right: 12,
+                left: 8,
+                bottom: 0
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return formatInteger(context.parsed.y);
+                  }
+                }
+              },
+              valueLabels: {
+                enabled: true,
+                mode: "line"
+              }
+            },
+            scales: {
+              x: {
+                ticks: {
+                  color: "#5b5b5b",
+                  font: {
+                    size: 12
+                  }
+                },
+                grid: {
+                  color: "#d0d0d0",
+                  borderDash: [2, 4],
+                  drawBorder: false
+                },
+                border: {
+                  display: false
+                }
+              },
+              y: {
+                display: false,
+                beginAtZero: false
+              }
+            }
+          }
+        });
+      }
+
+      function buildBarChart(config) {
+        var canvas = document.getElementById("barChart");
+        chartInstances.bars = new window.Chart(canvas, {
+          type: "bar",
+          data: {
+            labels: config.bars.labels,
+            datasets: [
+              {
+                label: "Hombre",
+                data: config.bars.first,
+                backgroundColor: "#312f86",
+                borderRadius: 0,
+                borderSkipped: false
+              },
+              {
+                label: "Mujer",
+                data: config.bars.second,
+                backgroundColor: "#e781b6",
+                borderRadius: 0,
+                borderSkipped: false
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            layout: {
+              padding: {
+                top: 14,
+                right: 8,
+                left: 8,
+                bottom: 0
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    return context.dataset.label + ": " + formatInteger(context.parsed.y);
+                  }
+                }
+              },
+              valueLabels: {
+                enabled: true,
+                mode: "bar",
+                font: "600 11px Segoe UI"
+              }
+            },
+            scales: {
+              x: {
+                stacked: false,
+                ticks: {
+                  color: "#5b5b5b",
+                  maxRotation: 0,
+                  minRotation: 0,
+                  font: {
+                    size: 12
+                  }
+                },
+                grid: {
+                  display: false
+                },
+                border: {
+                  display: false
+                }
+              },
+              y: {
+                display: false,
+                beginAtZero: true
+              }
+            }
+          }
+        });
+      }
+
+      function buildDonutChart(config) {
+        var canvas = document.getElementById("donutChart");
+        chartInstances.donut = new window.Chart(canvas, {
+          type: "doughnut",
+          data: {
+            labels: config.donut.labels,
+            datasets: [
+              {
+                data: config.donut.values,
+                backgroundColor: config.donut.colors,
+                borderWidth: 0,
+                hoverOffset: 2
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            cutout: "60%",
+            layout: {
+              padding: {
+                top: 24,
+                right: 66,
+                left: 66,
+                bottom: 24
+              }
+            },
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  label: function (context) {
+                    var values = context.dataset.data;
+                    var total = values.reduce(function (sum, current) {
+                      return sum + current;
+                    }, 0);
+                    var currentValue = Number(context.parsed) || 0;
+                    var pct = total ? (currentValue / total) * 100 : 0;
+                    return context.label + ": " + formatInteger(currentValue) + " (" + formatPercent(pct) + "%)";
+                  }
+                }
+              },
+              donutOutLabels: {
+                enabled: true
+              }
+            }
+          }
+        });
+      }
+
+      async function ensureChartJs() {
+        if (window.Chart) {
+          return;
+        }
+        await new Promise(function (resolve, reject) {
+          var script = document.createElement("script");
+          script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js";
+          script.async = true;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+
+      async function renderCharts(config) {
+        destroyCharts();
+
+        try {
+          await ensureChartJs();
+          registerPlugins();
+          buildLineChart(config);
+          buildBarChart(config);
+          buildDonutChart(config);
+        } catch (error) {
+          showChartError("lineChart", "No se pudo cargar Chart.js desde CDN.");
+          showChartError("barChart", "No se pudo cargar Chart.js desde CDN.");
+          showChartError("donutChart", "No se pudo cargar Chart.js desde CDN.");
+        }
+      }
+
+      // Render switching logic for the full page layout.
+      function applyView(config) {
+        var showSummary = config.vista !== "tabla";
+        var showTable = config.vista !== "dashboard";
+
+        dom.summarySection.classList.toggle("hidden", !showSummary);
+        dom.tableSection.classList.toggle("hidden", !showTable);
+      }
+
+      function bindActions() {
+        dom.btnClearFilters.addEventListener("click", function () {
+          window.location.href = window.location.pathname;
+        });
+      }
+
+      async function init() {
+        var params = readQueryParams();
+        var config = buildConfigFromQuery(params);
+
+        applyView(config);
+
+        if (config.vista !== "tabla") {
+          renderKpis(config);
+          renderFilterPills(config);
+          await renderCharts(config);
+        }
+
+        if (config.vista !== "dashboard") {
+          renderTable(config);
+        }
+      }
+
+      bindActions();
+      init();
+    })();
+  </script>
+</body>
+</html>
