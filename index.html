@@ -118,66 +118,6 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .filters-panel {
-      display: grid;
-      grid-template-columns: minmax(0, 1.9fr) repeat(4, minmax(0, 1fr));
-      gap: 8px 10px;
-      align-items: end;
-    }
-
-    .filter-item {
-      min-width: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .filter-item-date .filter-values {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 8px;
-    }
-
-    .filter-label {
-      margin: 0;
-      color: var(--ink);
-      font-size: clamp(0.82rem, 1.05vw, 0.97rem);
-      font-weight: 700;
-      font-family: var(--ui-font);
-      white-space: nowrap;
-    }
-
-    .filter-box {
-      min-height: 32px;
-      border: 1px solid #ddd;
-      background: #f4f4f4;
-      color: #525252;
-      font-size: clamp(0.8rem, 1vw, 0.94rem);
-      padding: 6px 30px 6px 10px;
-      display: inline-flex;
-      align-items: center;
-      position: relative;
-      border-radius: 2px;
-      font-family: var(--ui-font);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .filter-box-select::after {
-      content: "";
-      position: absolute;
-      right: 9px;
-      top: 50%;
-      margin-top: -2px;
-      width: 0;
-      height: 0;
-      border-left: 5px solid transparent;
-      border-right: 5px solid transparent;
-      border-top: 6px solid #9b9b9b;
-    }
-
-
     .charts-grid {
       display: grid;
       grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
@@ -307,15 +247,6 @@
       .kpi-card {
         flex: 1 1 100%;
       }
-
-      .filters-panel {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
-      .filter-item-date .filter-values {
-        grid-template-columns: minmax(0, 1fr);
-      }
-
     }
   </style>
 </head>
@@ -337,32 +268,6 @@
               <p class="kpi-title">Numero de Protocolos</p>
               <p class="kpi-value" id="kpiProtocolos">0</p>
             </article>
-          </div>
-        </div>
-
-        <div class="filters-panel">
-          <div class="filter-item filter-item-date">
-            <p class="filter-label">Fecha de inicio</p>
-            <div class="filter-values">
-              <span id="filtroFechaInicioDesde" class="filter-box">17/01/2019</span>
-              <span id="filtroFechaInicioHasta" class="filter-box">04/07/2025</span>
-            </div>
-          </div>
-          <div class="filter-item">
-            <p class="filter-label">Fecha de corte</p>
-            <span id="filtroFechaCorte" class="filter-box filter-box-select">15/07/2025</span>
-          </div>
-          <div class="filter-item">
-            <p class="filter-label">Hospital</p>
-            <span id="filtroHospital" class="filter-box filter-box-select">Todas</span>
-          </div>
-          <div class="filter-item">
-            <p class="filter-label">Sexo</p>
-            <span id="filtroSexo" class="filter-box filter-box-select">Todas</span>
-          </div>
-          <div class="filter-item">
-            <p class="filter-label">Tramos de edad</p>
-            <span id="filtroTramosEdad" class="filter-box filter-box-select">Todas</span>
           </div>
         </div>
 
@@ -410,14 +315,6 @@
           exitos: 3350,
           protocolos: 240
         },
-        filters: {
-          fechaInicioDesde: "17/01/2019",
-          fechaInicioHasta: "04/07/2025",
-          fechaCorte: "15/07/2025",
-          hospital: "Todas",
-          sexo: "Todas",
-          tramosEdad: "Todas"
-        },
         line: {
           labels: ["2019", "2020", "2021", "2022", "2023", "2024", "2025"],
           values: [459, 778, 910, 991, 939, 983, 519]
@@ -443,13 +340,7 @@
       var dom = {
         kpiPacientes: document.getElementById("kpiPacientes"),
         kpiExitos: document.getElementById("kpiExitos"),
-        kpiProtocolos: document.getElementById("kpiProtocolos"),
-        filtroFechaInicioDesde: document.getElementById("filtroFechaInicioDesde"),
-        filtroFechaInicioHasta: document.getElementById("filtroFechaInicioHasta"),
-        filtroFechaCorte: document.getElementById("filtroFechaCorte"),
-        filtroHospital: document.getElementById("filtroHospital"),
-        filtroSexo: document.getElementById("filtroSexo"),
-        filtroTramosEdad: document.getElementById("filtroTramosEdad")
+        kpiProtocolos: document.getElementById("kpiProtocolos")
       };
 
       var rootStyles = window.getComputedStyle(document.documentElement);
@@ -710,38 +601,6 @@
             exitos: toSafeNumber(readTextParam(params, ["numexitos", "num_exitos"], DEFAULTS.kpi.exitos), DEFAULTS.kpi.exitos),
             protocolos: toSafeNumber(readTextParam(params, ["numprotocolos", "num_protocolos"], DEFAULTS.kpi.protocolos), DEFAULTS.kpi.protocolos)
           },
-          filters: {
-            fechaInicioDesde: readTextParam(
-              params,
-              ["filtrofechainiciodesde", "fechainiciodesde", "filtro_fecha_inicio_desde"],
-              DEFAULTS.filters.fechaInicioDesde
-            ),
-            fechaInicioHasta: readTextParam(
-              params,
-              ["filtrofechainiciohasta", "fechainiciohasta", "filtro_fecha_inicio_hasta"],
-              DEFAULTS.filters.fechaInicioHasta
-            ),
-            fechaCorte: readTextParam(
-              params,
-              ["filtrofechacorte", "fechacorte", "filtro_fecha_corte"],
-              DEFAULTS.filters.fechaCorte
-            ),
-            hospital: readTextParam(
-              params,
-              ["filtrohospital", "hospital", "filtro_hospital"],
-              DEFAULTS.filters.hospital
-            ),
-            sexo: readTextParam(
-              params,
-              ["filtrosexo", "sexo", "filtro_sexo"],
-              DEFAULTS.filters.sexo
-            ),
-            tramosEdad: readTextParam(
-              params,
-              ["filtrotramosedad", "tramosedad", "filtro_tramos_edad"],
-              DEFAULTS.filters.tramosEdad
-            )
-          },
           line: lineSeries,
           bars: barSeries,
           donut: {
@@ -769,15 +628,6 @@
         dom.kpiPacientes.textContent = formatInteger(config.kpi.pacientes);
         dom.kpiExitos.textContent = formatInteger(config.kpi.exitos);
         dom.kpiProtocolos.textContent = formatInteger(config.kpi.protocolos);
-      }
-
-      function renderFilterPills(config) {
-        dom.filtroFechaInicioDesde.textContent = config.filters.fechaInicioDesde;
-        dom.filtroFechaInicioHasta.textContent = config.filters.fechaInicioHasta;
-        dom.filtroFechaCorte.textContent = config.filters.fechaCorte;
-        dom.filtroHospital.textContent = config.filters.hospital;
-        dom.filtroSexo.textContent = config.filters.sexo;
-        dom.filtroTramosEdad.textContent = config.filters.tramosEdad;
       }
 
       function destroyCharts() {
@@ -1171,7 +1021,6 @@
         var config = buildConfigFromQuery(params);
 
         renderKpis(config);
-        renderFilterPills(config);
         await renderCharts(config);
       }
 
