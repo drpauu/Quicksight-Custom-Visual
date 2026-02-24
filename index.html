@@ -261,7 +261,7 @@
               <p class="kpi-value" id="kpiPacientes">0</p>
             </article>
             <article class="kpi-card">
-              <p class="kpi-title">Numero de Exitos</p>
+              <p class="kpi-title">Numero de Exitus</p>
               <p class="kpi-value" id="kpiExitos">0</p>
             </article>
             <article class="kpi-card">
@@ -289,8 +289,8 @@
           <section class="panel panel-bars">
             <h2 class="panel-title">Numero de pacientes por edad y sexo</h2>
             <div class="legend-row">
-              <span class="legend-item"><span class="dot dot-male"></span>Hombre</span>
-              <span class="legend-item"><span class="dot dot-female"></span>Mujer</span>
+              <span class="legend-item"><span class="dot dot-male"></span>Masculino</span>
+              <span class="legend-item"><span class="dot dot-female"></span>Femenino</span>
             </div>
             <div class="canvas-wrap">
               <canvas id="barChart" aria-label="Grafico de barras por edad y sexo" role="img"></canvas>
@@ -312,7 +312,7 @@
       var DEFAULTS = {
         kpi: {
           pacientes: 5559,
-          exitos: 3350,
+          exitus: 3350,
           protocolos: 240
         },
         line: {
@@ -373,6 +373,15 @@
       function readQueryParams() {
         return new URLSearchParams(window.location.search);
       }
+
+      /*
+       * Canonical URL params (alphanumeric names):
+       * - KPIs: numpacientes, numexitus, numprotocolos
+       * - Line chart: aniofechainicio, numpacientesanio
+       * - Bar chart: tramoedadgrafico, numpacientesmasculino, numpacientesfemenino
+       * - Donut chart: codhosplista, numpacientescodhosp
+       * - Filters: fechainicio, fechacorte, codhosp, sexo, tramoedad
+       */
 
       // Numeric validation:
       // - accepts "1234", "1,5", "1.5", "5.559,2"
@@ -544,29 +553,265 @@
         };
       }
 
-      function normalizeColorList(labels, colors, fallbackColors) {
-        var cleaned = colors
-          .map(function (color) {
-            return String(color).trim();
-          })
-          .filter(function (color) {
-            return /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(color);
-          });
+      function buildDonutColorList(labels, hospitalCodes) {
+        var palette = [
+          THEME.ring1, // teal
+          THEME.ring2, // pink
+          THEME.ring3, // orange
+          THEME.ring4, // gray
+          THEME.ring5  // blue
+        ];
 
-        if (!cleaned.length) {
-          cleaned = fallbackColors.slice();
-        }
+        // Keep exact reference color mapping for known hospitals.
+        var fixedByHospital = {
+          od: THEME.ring1,
+          huc: THEME.ring2,
+          hub: THEME.ring3,
+          hua: THEME.ring4,
+          hgu: THEME.ring5
+        };
 
         var output = [];
         for (var i = 0; i < labels.length; i += 1) {
-          output.push(cleaned[i % cleaned.length]);
+          var labelToken = normalizeCompactToken(labels[i]);
+          var codeToken = normalizeCompactToken(hospitalCodes[i] || "");
+          var labelNoH = labelToken.replace(/^h+/, "");
+          var codeNoH = codeToken.replace(/^h+/, "");
+          var mapped =
+            fixedByHospital[labelToken] ||
+            fixedByHospital[codeToken] ||
+            fixedByHospital[labelNoH] ||
+            fixedByHospital[codeNoH];
+
+          output.push(mapped || palette[i % palette.length]);
         }
+
         return output;
       }
 
+      function normalizeFilterText(value) {
+        return String(value || "")
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, " ");
+      }
+
+      function parseFilterTokens(value) {
+        if (isAllFilter(value)) {
+          return [];
+        }
+        return normalizeFilterText(value)
+          .split(/[|,;]/)
+          .map(function (token) {
+            return token.trim();
+          })
+          .filter(function (token) {
+            return token.length > 0;
+          });
+      }
+
+      function normalizeCompactToken(value) {
+        return normalizeFilterText(value).replace(/[^a-z0-9]/g, "");
+      }
+
+      function isAllFilter(value) {
+        var v = normalizeFilterText(value);
+        return !v || v === "todas" || v === "todos" || v === "all";
+      }
+
+      function parseDateInput(value) {
+        var text = String(value || "").trim();
+        if (!text) {
+          return null;
+        }
+
+        var dmy = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/.exec(text);
+        if (dmy) {
+          var day = Number(dmy[1]);
+          var month = Number(dmy[2]);
+          var year = Number(dmy[3]);
+          if (year > 1900 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+            return new Date(year, month - 1, day);
+          }
+        }
+
+        var ymd = /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/.exec(text);
+        if (ymd) {
+          var y = Number(ymd[1]);
+          var m = Number(ymd[2]);
+          var d = Number(ymd[3]);
+          if (y > 1900 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
+            return new Date(y, m - 1, d);
+          }
+        }
+
+        return null;
+      }
+
+      function parseYearFromLabel(label) {
+        var match = String(label || "").match(/(19|20)\d{2}/);
+        return match ? Number(match[0]) : null;
+      }
+
+      function applySeriesFilters(baseConfig, filters) {
+        var lineLabels = baseConfig.line.labels.slice();
+        var lineValues = baseConfig.line.values.slice();
+        var barLabels = baseConfig.bars.labels.slice();
+        var barHombre = baseConfig.bars.first.slice();
+        var barMujer = baseConfig.bars.second.slice();
+        var donutLabels = baseConfig.donut.labels.slice();
+        var donutValues = baseConfig.donut.values.slice();
+        var donutColors = baseConfig.donut.colors.slice();
+        var donutCodes = filters.hospitalCodes.slice();
+
+        // Filter line chart by date range using year labels:
+        // X axis = anio_fecha_inicio, Y axis = numero de pacientes.
+        var fromDate = parseDateInput(filters.fechaInicio);
+        var toDate = parseDateInput(filters.fechaCorte) || parseDateInput(filters.fechaInicioHasta);
+        if (fromDate || toDate) {
+          var filteredLineLabels = [];
+          var filteredLineValues = [];
+          for (var i = 0; i < lineLabels.length; i += 1) {
+            var year = parseYearFromLabel(lineLabels[i]);
+            if (year === null) {
+              continue;
+            }
+            var allowed = true;
+            if (fromDate && year < fromDate.getFullYear()) {
+              allowed = false;
+            }
+            if (toDate && year > toDate.getFullYear()) {
+              allowed = false;
+            }
+            if (allowed) {
+              filteredLineLabels.push(lineLabels[i]);
+              filteredLineValues.push(lineValues[i]);
+            }
+          }
+          if (filteredLineLabels.length >= 2) {
+            lineLabels = filteredLineLabels;
+            lineValues = filteredLineValues;
+          }
+        }
+
+        // Filter bars by tramoedad.
+        var tramoTokens = parseFilterTokens(filters.tramoEdad);
+        if (tramoTokens.length) {
+          var filteredBarLabels = [];
+          var filteredBarH = [];
+          var filteredBarM = [];
+          for (var j = 0; j < barLabels.length; j += 1) {
+            var labelKey = normalizeFilterText(barLabels[j]);
+            var match = tramoTokens.indexOf(labelKey) > -1;
+            if (!match) {
+              for (var k = 0; k < tramoTokens.length; k += 1) {
+                if (labelKey.indexOf(tramoTokens[k]) > -1 || tramoTokens[k].indexOf(labelKey) > -1) {
+                  match = true;
+                  break;
+                }
+              }
+            }
+            if (match) {
+              filteredBarLabels.push(barLabels[j]);
+              filteredBarH.push(barHombre[j]);
+              filteredBarM.push(barMujer[j]);
+            }
+          }
+          if (filteredBarLabels.length) {
+            barLabels = filteredBarLabels;
+            barHombre = filteredBarH;
+            barMujer = filteredBarM;
+          }
+        }
+
+        // Filter bars by sexo by zeroing opposite series.
+        var sexoKey = normalizeFilterText(filters.sexo);
+        if (sexoKey === "masculino" || sexoKey === "hombre" || sexoKey === "male" || sexoKey === "1") {
+          barMujer = barMujer.map(function () { return 0; });
+        } else if (sexoKey === "femenino" || sexoKey === "mujer" || sexoKey === "female" || sexoKey === "2") {
+          barHombre = barHombre.map(function () { return 0; });
+        }
+
+        // Filter donut by hospital/codhosp if provided.
+        var hospitalTokens = parseFilterTokens(filters.hospital);
+        if (hospitalTokens.length) {
+          var filteredDonutLabels = [];
+          var filteredDonutValues = [];
+          var filteredDonutColors = [];
+
+          for (var x = 0; x < donutLabels.length; x += 1) {
+            var labelNorm = normalizeFilterText(donutLabels[x]);
+            var codeNorm = normalizeFilterText(donutCodes[x] || "");
+            var labelCompact = normalizeCompactToken(labelNorm);
+            var codeCompact = normalizeCompactToken(codeNorm);
+            var labelNoH = labelCompact.replace(/^h+/, "");
+            var codeNoH = codeCompact.replace(/^h+/, "");
+            var matchesHospital = false;
+
+            for (var h = 0; h < hospitalTokens.length; h += 1) {
+              var token = hospitalTokens[h];
+              var tokenCompact = normalizeCompactToken(token);
+              var tokenNoH = tokenCompact.replace(/^h+/, "");
+              if (
+                labelNorm === token ||
+                codeNorm === token ||
+                labelCompact === tokenCompact ||
+                codeCompact === tokenCompact ||
+                labelNoH === tokenNoH ||
+                codeNoH === tokenNoH
+              ) {
+                matchesHospital = true;
+                break;
+              }
+            }
+
+            if (matchesHospital) {
+              filteredDonutLabels.push(donutLabels[x]);
+              filteredDonutValues.push(donutValues[x]);
+              filteredDonutColors.push(donutColors[x]);
+            }
+          }
+
+          if (filteredDonutLabels.length) {
+            donutLabels = filteredDonutLabels;
+            donutValues = filteredDonutValues;
+            donutColors = filteredDonutColors;
+          }
+        }
+
+        return {
+          line: {
+            labels: lineLabels,
+            values: lineValues
+          },
+          bars: {
+            labels: barLabels,
+            first: barHombre,
+            second: barMujer
+          },
+          donut: {
+            labels: donutLabels,
+            values: donutValues,
+            colors: donutColors
+          }
+        };
+      }
+
       function buildConfigFromQuery(params) {
-        var lineLabels = readTextList(params, ["lineanios", "line_anios"], DEFAULTS.line.labels);
-        var lineValues = readNumberList(params, ["linevalores", "line_valores"], DEFAULTS.line.values);
+        // Chart mappings requested:
+        // - Line: X=anio_fecha_inicio, Y=numero de pacientes
+        // - Bars: X=tramo edad, Y=numero de pacientes (Masculino/Femenino)
+        // - Donut: codhosp vs numero de pacientes
+        var lineLabels = readTextList(
+          params,
+          ["aniofechainicio", "anioinicio", "lineanios", "line_anios"],
+          DEFAULTS.line.labels
+        );
+        var lineValues = readNumberList(
+          params,
+          ["numpacientesanio", "numpacienteslinea", "linevalores", "line_valores"],
+          DEFAULTS.line.values
+        );
         var lineSeries = normalizeSingleSeries(
           lineLabels,
           lineValues,
@@ -575,13 +820,33 @@
           2
         );
 
-        var barLabels = readTextList(params, ["edadlabels", "edad_labels"], DEFAULTS.bars.labels);
-        var barHombre = readNumberList(params, ["edadhombres", "edad_hombres"], DEFAULTS.bars.hombre);
-        var barMujer = readNumberList(params, ["edadmujeres", "edad_mujeres"], DEFAULTS.bars.mujer);
+        var barLabels = readTextList(
+          params,
+          ["tramoedadgrafico", "tramoedadlabels", "edadlabels", "edad_labels"],
+          DEFAULTS.bars.labels
+        );
+        var barHombre = readNumberList(
+          params,
+          ["numpacientesmasculino", "numpacienteshombre", "edadhombres", "edad_hombres"],
+          DEFAULTS.bars.hombre
+        );
+        var barMujer = readNumberList(
+          params,
+          ["numpacientesfemenino", "numpacientesmujer", "edadmujeres", "edad_mujeres"],
+          DEFAULTS.bars.mujer
+        );
         var barSeries = normalizeGroupedSeries(barLabels, barHombre, barMujer, DEFAULTS.bars);
 
-        var donutLabels = readTextList(params, ["hospitallabels", "hospital_labels"], DEFAULTS.donut.labels);
-        var donutValues = readNumberList(params, ["hospitalvalores", "hospital_valores"], DEFAULTS.donut.values);
+        var donutLabels = readTextList(
+          params,
+          ["codhosplista", "codhosplabels", "hospitallabels", "hospital_labels"],
+          DEFAULTS.donut.labels
+        );
+        var donutValues = readNumberList(
+          params,
+          ["numpacientescodhosp", "numpacienteshospital", "hospitalvalores", "hospital_valores"],
+          DEFAULTS.donut.values
+        );
         var donutSeries = normalizeSingleSeries(
           donutLabels,
           donutValues,
@@ -589,25 +854,60 @@
           DEFAULTS.donut.values,
           1
         );
-        var donutColors = normalizeColorList(
-          donutSeries.labels,
-          readTextList(params, ["hospitalcolores", "hospital_colores"], DEFAULTS.donut.colors),
-          DEFAULTS.donut.colors
+        var hospitalCodes = readTextList(
+          params,
+          ["codhospcodigos", "hospitalcodigos", "hospitalcods", "hospital_codes"],
+          []
+        );
+        var donutColors = buildDonutColorList(donutSeries.labels, hospitalCodes);
+        var hospitalFilter = readTextParam(
+          params,
+          ["codhosp", "hospitalfiltro", "filtrohospital", "hospital", "hospitalid"],
+          "Todas"
+        );
+        var sexoFilter = readTextParam(params, ["sexo", "Sexo", "filtrosexo"], "Todas");
+        var tramoEdadFilter = readTextParam(params, ["tramoedad", "filtrotramoedad", "filtrotramosedad"], "Todas");
+        var fechaInicio = readTextParam(
+          params,
+          ["fechainicio", "fechainiciodesde", "filtrofechainicio", "filtrofechainiciodesde"],
+          ""
+        );
+        var fechaInicioHasta = readTextParam(params, ["fechainiciohasta", "filtrofechainiciohasta"], "");
+        var fechaCorte = readTextParam(params, ["fechacorte", "filtrofechacorte"], "");
+
+        var filteredSeries = applySeriesFilters(
+          {
+            line: lineSeries,
+            bars: barSeries,
+            donut: {
+              labels: donutSeries.labels,
+              values: donutSeries.values,
+              colors: donutColors
+            }
+          },
+          {
+            hospital: hospitalFilter,
+            sexo: sexoFilter,
+            tramoEdad: tramoEdadFilter,
+            fechaInicio: fechaInicio,
+            fechaInicioHasta: fechaInicioHasta,
+            fechaCorte: fechaCorte,
+            hospitalCodes: hospitalCodes
+          }
         );
 
         return {
           kpi: {
             pacientes: toSafeNumber(readTextParam(params, ["numpacientes", "num_pacientes"], DEFAULTS.kpi.pacientes), DEFAULTS.kpi.pacientes),
-            exitos: toSafeNumber(readTextParam(params, ["numexitos", "num_exitos"], DEFAULTS.kpi.exitos), DEFAULTS.kpi.exitos),
+            exitus: toSafeNumber(
+              readTextParam(params, ["numexitus", "numexitos", "num_exitus", "num_exitos"], DEFAULTS.kpi.exitus),
+              DEFAULTS.kpi.exitus
+            ),
             protocolos: toSafeNumber(readTextParam(params, ["numprotocolos", "num_protocolos"], DEFAULTS.kpi.protocolos), DEFAULTS.kpi.protocolos)
           },
-          line: lineSeries,
-          bars: barSeries,
-          donut: {
-            labels: donutSeries.labels,
-            values: donutSeries.values,
-            colors: donutColors
-          }
+          line: filteredSeries.line,
+          bars: filteredSeries.bars,
+          donut: filteredSeries.donut
         };
       }
 
@@ -626,7 +926,7 @@
 
       function renderKpis(config) {
         dom.kpiPacientes.textContent = formatInteger(config.kpi.pacientes);
-        dom.kpiExitos.textContent = formatInteger(config.kpi.exitos);
+        dom.kpiExitos.textContent = formatInteger(config.kpi.exitus);
         dom.kpiProtocolos.textContent = formatInteger(config.kpi.protocolos);
       }
 
@@ -861,14 +1161,14 @@
             labels: config.bars.labels,
             datasets: [
               {
-                label: "Hombre",
+                label: "Masculino",
                 data: config.bars.first,
                 backgroundColor: THEME.male,
                 borderRadius: 0,
                 borderSkipped: false
               },
               {
-                label: "Mujer",
+                label: "Femenino",
                 data: config.bars.second,
                 backgroundColor: THEME.female,
                 borderRadius: 0,
