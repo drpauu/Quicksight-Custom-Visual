@@ -263,83 +263,6 @@
       text-align: center;
     }
 
-    .table-section {
-      width: 100%;
-      min-width: 0;
-      background: transparent;
-    }
-
-    .table-wrap {
-      overflow: auto;
-      border-top: 1px solid #ced0d8;
-    }
-
-    table {
-      width: 100%;
-      min-width: 1200px;
-      border-collapse: collapse;
-      table-layout: fixed;
-      font-size: clamp(0.78rem, 1.06vw, 0.99rem);
-      background: #f8f8f8;
-    }
-
-    thead th {
-      background: var(--ink);
-      color: #fff;
-      font-weight: 700;
-      border-right: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 7px 6px;
-      text-align: center;
-      vertical-align: top;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-
-    tbody td {
-      padding: 6px 6px;
-      border-bottom: 1px solid #e6e6e6;
-      vertical-align: top;
-      color: #4c4c4c;
-      word-break: break-word;
-      font-family: var(--ui-font);
-    }
-
-    tbody tr:nth-child(even) {
-      background: #efefef;
-    }
-
-    tbody tr:nth-child(odd) {
-      background: #f8f8f8;
-    }
-
-    tfoot td {
-      border-top: 1px solid #353992;
-      padding: 6px 6px;
-      font-weight: 700;
-      background: #f7f7f7;
-      color: #222;
-    }
-
-    .num {
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-      font-family: var(--num-font);
-    }
-
-    .center {
-      text-align: center;
-    }
-
-    .total-label {
-      text-align: left;
-      padding-left: 62px;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
     @media (max-width: 1200px) {
       .charts-grid {
         grid-template-columns: 1fr;
@@ -429,36 +352,6 @@
           </section>
         </div>
       </section>
-
-      <section id="tableSection" class="table-section">
-        <div class="table-wrap">
-          <table aria-label="Tabla de protocolos y pacientes">
-            <thead>
-              <tr>
-                <th style="width: 96px;">Codigo<br>Diagnostico</th>
-                <th style="width: 98px;">Diagnostico</th>
-                <th style="width: 88px;">Codigo<br>Indicacion</th>
-                <th style="width: 152px;">Indicacion</th>
-                <th style="width: 94px;">Codigo<br>Protocolo</th>
-                <th style="width: 220px;">Protocolo</th>
-                <th style="width: 78px;">Siglas<br>Hospital</th>
-                <th style="width: 56px;">Sexo</th>
-                <th style="width: 78px;">Edad</th>
-                <th style="width: 96px;">Numero de<br>pacientes</th>
-                <th style="width: 138px;">Media de meses de supervivencia global</th>
-              </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-            <tfoot>
-              <tr>
-                <td class="total-label" colspan="9">Total</td>
-                <td id="tableTotalPacientes" class="num">0</td>
-                <td id="tableTotalMedia" class="num">0,00</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </section>
     </div>
   </main>
 
@@ -471,7 +364,6 @@
        * Every value can be replaced from URL query parameters.
        */
       var DEFAULTS = {
-        vista: "completo",
         kpi: {
           pacientes: 5559,
           exitos: 3350,
@@ -496,198 +388,8 @@
           labels: ["OD", "HUC", "HUB", "HUA", "HGU"],
           values: [1660, 1095, 991, 936, 877],
           colors: ["#3fb4ac", "#e77fb5", "#ff7a00", "#9d9a90", "#33348f"]
-        },
-        table: {
-          totalPacientes: 5559,
-          mediaSupervivenciaGlobal: 13.82,
-          rows: [
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2429",
-              indicacion: "Adyuvante",
-              codProtocolo: "7802",
-              protocolo: "",
-              siglasHospital: "HUB",
-              sexo: "Mujer",
-              edad: "70-79 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 0.0
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "7761",
-              protocolo: "",
-              siglasHospital: "HUA",
-              sexo: "Hombre",
-              edad: "60-69 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 0.13
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "7770",
-              protocolo: "",
-              siglasHospital: "HUA",
-              sexo: "Mujer",
-              edad: "60-69 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 0.27
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "127",
-              indicacion: "Enf. metastasica 3a linea",
-              codProtocolo: "7422",
-              protocolo: "AE DATOPOTAMAB DERUXTECAN",
-              siglasHospital: "HUC",
-              sexo: "Mujer",
-              edad: "Menos de 50 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 6.5
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "967",
-              protocolo: "AFATINIB",
-              siglasHospital: "HGU",
-              sexo: "Hombre",
-              edad: "60-69 anios",
-              numeroPacientes: 2,
-              mediaMesesSupervivencia: 20.02
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "967",
-              protocolo: "AFATINIB",
-              siglasHospital: "HGU",
-              sexo: "Hombre",
-              edad: "70-79 anios",
-              numeroPacientes: 2,
-              mediaMesesSupervivencia: 29.88
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "967",
-              protocolo: "AFATINIB",
-              siglasHospital: "HGU",
-              sexo: "Mujer",
-              edad: "70-79 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 1.87
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "967",
-              protocolo: "AFATINIB",
-              siglasHospital: "HUA",
-              sexo: "Hombre",
-              edad: "60-69 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 0.37
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "967",
-              protocolo: "AFATINIB",
-              siglasHospital: "HUA",
-              sexo: "Mujer",
-              edad: "50-59 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 73.2
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "967",
-              protocolo: "AFATINIB",
-              siglasHospital: "HUB",
-              sexo: "Hombre",
-              edad: "50-59 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 42.67
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "967",
-              protocolo: "AFATINIB",
-              siglasHospital: "HUB",
-              sexo: "Mujer",
-              edad: "50-59 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 3.9
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "967",
-              protocolo: "AFATINIB",
-              siglasHospital: "HUB",
-              sexo: "Mujer",
-              edad: "Mas de 80 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 69.53
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "967",
-              protocolo: "AFATINIB",
-              siglasHospital: "HUB",
-              sexo: "Mujer",
-              edad: "Menos de 50 anios",
-              numeroPacientes: 1,
-              mediaMesesSupervivencia: 25.77
-            },
-            {
-              codDiagnostico: "107",
-              diagnostico: "No microcitico",
-              codIndicacion: "2430",
-              indicacion: "Enf. metastasica 1a linea",
-              codProtocolo: "967",
-              protocolo: "AFATINIB",
-              siglasHospital: "HUC",
-              sexo: "Mujer",
-              edad: "60-69 anios",
-              numeroPacientes: 2,
-              mediaMesesSupervivencia: 4.53
-            }
-          ]
         }
       };
-
-      var VALID_VIEWS = new Set(["completo", "dashboard", "tabla"]);
       var chartInstances = {
         line: null,
         bars: null,
@@ -696,17 +398,12 @@
       var pluginsRegistered = false;
 
       var dom = {
-        summarySection: document.getElementById("summarySection"),
-        tableSection: document.getElementById("tableSection"),
         kpiPacientes: document.getElementById("kpiPacientes"),
         kpiExitos: document.getElementById("kpiExitos"),
         kpiProtocolos: document.getElementById("kpiProtocolos"),
         filtroGenetica: document.getElementById("filtroGenetica"),
         filtroAdicional: document.getElementById("filtroAdicional"),
-        btnClearFilters: document.getElementById("btnClearFilters"),
-        tableBody: document.getElementById("tableBody"),
-        tableTotalPacientes: document.getElementById("tableTotalPacientes"),
-        tableTotalMedia: document.getElementById("tableTotalMedia")
+        btnClearFilters: document.getElementById("btnClearFilters")
       };
 
       var rootStyles = window.getComputedStyle(document.documentElement);
@@ -776,14 +473,6 @@
         return Number.isFinite(parsed) ? parsed : fallback;
       }
 
-      function toOptionalNumber(params, key) {
-        if (!params.has(key)) {
-          return null;
-        }
-        var parsed = toSafeNumber(params.get(key), Number.NaN);
-        return Number.isFinite(parsed) ? parsed : null;
-      }
-
       function normalizeText(input, fallback) {
         if (input === null || input === undefined) {
           return fallback;
@@ -797,20 +486,6 @@
           return fallback;
         }
         return normalizeText(params.get(key), fallback);
-      }
-
-      function readBooleanParam(params, key, fallback) {
-        if (!params.has(key)) {
-          return fallback;
-        }
-        var normalized = String(params.get(key)).trim().toLowerCase();
-        if (normalized === "1" || normalized === "true" || normalized === "si" || normalized === "yes") {
-          return true;
-        }
-        if (normalized === "0" || normalized === "false" || normalized === "no") {
-          return false;
-        }
-        return fallback;
       }
 
       function parseList(raw) {
@@ -935,155 +610,7 @@
         return output;
       }
 
-      function pickFirst(obj, keys, fallback) {
-        for (var i = 0; i < keys.length; i += 1) {
-          var value = obj[keys[i]];
-          if (value !== null && value !== undefined) {
-            return value;
-          }
-        }
-        return fallback;
-      }
-
-      function sanitizeRows(rows) {
-        if (!Array.isArray(rows)) {
-          return null;
-        }
-
-        var normalized = [];
-        for (var i = 0; i < rows.length; i += 1) {
-          var row = rows[i];
-          if (!row || typeof row !== "object") {
-            continue;
-          }
-
-          normalized.push({
-            codDiagnostico: normalizeText(pickFirst(row, ["codDiagnostico", "codigoDiagnostico", "cod_diagnostico"], ""), ""),
-            diagnostico: normalizeText(pickFirst(row, ["diagnostico"], ""), ""),
-            codIndicacion: normalizeText(pickFirst(row, ["codIndicacion", "codigoIndicacion", "cod_indicacion"], ""), ""),
-            indicacion: normalizeText(pickFirst(row, ["indicacion"], ""), ""),
-            codProtocolo: normalizeText(pickFirst(row, ["codProtocolo", "codigoProtocolo", "cod_protocolo"], ""), ""),
-            protocolo: normalizeText(pickFirst(row, ["protocolo"], ""), ""),
-            siglasHospital: normalizeText(pickFirst(row, ["siglasHospital", "hospital", "siglas_hospital"], ""), ""),
-            sexo: normalizeText(pickFirst(row, ["sexo"], ""), ""),
-            edad: normalizeText(pickFirst(row, ["edad"], ""), ""),
-            numeroPacientes: toSafeNumber(pickFirst(row, ["numeroPacientes", "numPacientes", "numero_pacientes"], 0), 0),
-            mediaMesesSupervivencia: toSafeNumber(pickFirst(row, ["mediaMesesSupervivencia", "mediaSupervivencia", "media_meses_supervivencia"], 0), 0)
-          });
-        }
-
-        return normalized.length ? normalized : null;
-      }
-
-      function readRowsFromJsonParam(params) {
-        if (!params.has("tabla_rows")) {
-          return null;
-        }
-
-        var raw = params.get("tabla_rows");
-        if (!raw) {
-          return null;
-        }
-
-        try {
-          var jsonRows = JSON.parse(raw);
-          return sanitizeRows(jsonRows);
-        } catch (errorA) {
-          // Keep trying with base64.
-        }
-
-        try {
-          var decoded = atob(raw);
-          var decodedRows = JSON.parse(decoded);
-          return sanitizeRows(decodedRows);
-        } catch (errorB) {
-          return null;
-        }
-      }
-
-      function readRowsFromColumnParams(params) {
-        var map = {
-          codDiagnostico: "tabla_cod_diagnostico",
-          diagnostico: "tabla_diagnostico",
-          codIndicacion: "tabla_cod_indicacion",
-          indicacion: "tabla_indicacion",
-          codProtocolo: "tabla_cod_protocolo",
-          protocolo: "tabla_protocolo",
-          siglasHospital: "tabla_siglas_hospital",
-          sexo: "tabla_sexo",
-          edad: "tabla_edad",
-          numeroPacientes: "tabla_num_pacientes",
-          mediaMesesSupervivencia: "tabla_media_meses"
-        };
-
-        var hasAnyColumn = false;
-        var columns = {};
-        var maxLen = 0;
-
-        var keys = Object.keys(map);
-        for (var i = 0; i < keys.length; i += 1) {
-          var field = keys[i];
-          var paramName = map[field];
-
-          if (!params.has(paramName)) {
-            columns[field] = [];
-            continue;
-          }
-
-          hasAnyColumn = true;
-          if (field === "numeroPacientes" || field === "mediaMesesSupervivencia") {
-            columns[field] = readNumberList(params, paramName, []);
-          } else {
-            columns[field] = readTextList(params, paramName, []);
-          }
-          maxLen = Math.max(maxLen, columns[field].length);
-        }
-
-        if (!hasAnyColumn || maxLen === 0) {
-          return null;
-        }
-
-        var rows = [];
-        for (var index = 0; index < maxLen; index += 1) {
-          rows.push({
-            codDiagnostico: columns.codDiagnostico[index] || "",
-            diagnostico: columns.diagnostico[index] || "",
-            codIndicacion: columns.codIndicacion[index] || "",
-            indicacion: columns.indicacion[index] || "",
-            codProtocolo: columns.codProtocolo[index] || "",
-            protocolo: columns.protocolo[index] || "",
-            siglasHospital: columns.siglasHospital[index] || "",
-            sexo: columns.sexo[index] || "",
-            edad: columns.edad[index] || "",
-            numeroPacientes: Number.isFinite(columns.numeroPacientes[index]) ? columns.numeroPacientes[index] : 0,
-            mediaMesesSupervivencia: Number.isFinite(columns.mediaMesesSupervivencia[index]) ? columns.mediaMesesSupervivencia[index] : 0
-          });
-        }
-
-        return sanitizeRows(rows);
-      }
-
-      function weightedAverage(rows) {
-        var weightedSum = 0;
-        var weight = 0;
-        for (var i = 0; i < rows.length; i += 1) {
-          var count = Number(rows[i].numeroPacientes) || 0;
-          var avg = Number(rows[i].mediaMesesSupervivencia) || 0;
-          weightedSum += count * avg;
-          weight += count;
-        }
-        if (weight === 0) {
-          return 0;
-        }
-        return weightedSum / weight;
-      }
-
       function buildConfigFromQuery(params) {
-        var view = readTextParam(params, "vista", DEFAULTS.vista).toLowerCase();
-        if (!VALID_VIEWS.has(view)) {
-          view = DEFAULTS.vista;
-        }
-
         var lineLabels = readTextList(params, "line_anios", DEFAULTS.line.labels);
         var lineValues = readNumberList(params, "line_valores", DEFAULTS.line.values);
         var lineSeries = normalizeSingleSeries(
@@ -1114,35 +641,7 @@
           DEFAULTS.donut.colors
         );
 
-        var tableRows = readRowsFromJsonParam(params) || readRowsFromColumnParams(params) || DEFAULTS.table.rows.slice();
-        var autoTableTotals = readBooleanParam(params, "auto_totales_tabla", false);
-
-        var tableTotalPacientesParam = toOptionalNumber(params, "tabla_total_pacientes");
-        var tableMediaParam = toOptionalNumber(params, "tabla_media_supervivencia_global");
-
-        var tableTotalPacientes = tableTotalPacientesParam;
-        var tableMedia = tableMediaParam;
-
-        if (autoTableTotals) {
-          if (tableTotalPacientes === null) {
-            tableTotalPacientes = tableRows.reduce(function (sum, row) {
-              return sum + (Number(row.numeroPacientes) || 0);
-            }, 0);
-          }
-          if (tableMedia === null) {
-            tableMedia = weightedAverage(tableRows);
-          }
-        }
-
-        if (tableTotalPacientes === null) {
-          tableTotalPacientes = DEFAULTS.table.totalPacientes;
-        }
-        if (tableMedia === null) {
-          tableMedia = DEFAULTS.table.mediaSupervivenciaGlobal;
-        }
-
         return {
-          vista: view,
           kpi: {
             pacientes: toSafeNumber(readTextParam(params, "num_pacientes", DEFAULTS.kpi.pacientes), DEFAULTS.kpi.pacientes),
             exitos: toSafeNumber(readTextParam(params, "num_exitos", DEFAULTS.kpi.exitos), DEFAULTS.kpi.exitos),
@@ -1160,11 +659,6 @@
             labels: donutSeries.labels,
             values: donutSeries.values,
             colors: donutColors
-          },
-          table: {
-            rows: tableRows,
-            totalPacientes: tableTotalPacientes,
-            mediaSupervivenciaGlobal: tableMedia
           }
         };
       }
@@ -1175,27 +669,11 @@
         }).format(value);
       }
 
-      function formatDecimal(value) {
-        return new Intl.NumberFormat("es-ES", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        }).format(value);
-      }
-
       function formatPercent(value) {
         return new Intl.NumberFormat("es-ES", {
           minimumFractionDigits: 1,
           maximumFractionDigits: 1
         }).format(value);
-      }
-
-      function createCell(text, className) {
-        var td = document.createElement("td");
-        td.textContent = text;
-        if (className) {
-          td.className = className;
-        }
-        return td;
       }
 
       function renderKpis(config) {
@@ -1217,34 +695,6 @@
 
         dom.filtroGenetica.textContent = geneticaText;
         dom.filtroAdicional.textContent = adicionalText;
-      }
-
-      function renderTable(config) {
-        while (dom.tableBody.firstChild) {
-          dom.tableBody.removeChild(dom.tableBody.firstChild);
-        }
-
-        for (var i = 0; i < config.table.rows.length; i += 1) {
-          var row = config.table.rows[i];
-          var tr = document.createElement("tr");
-
-          tr.appendChild(createCell(row.codDiagnostico, "num"));
-          tr.appendChild(createCell(row.diagnostico));
-          tr.appendChild(createCell(row.codIndicacion, "num"));
-          tr.appendChild(createCell(row.indicacion));
-          tr.appendChild(createCell(row.codProtocolo, "num"));
-          tr.appendChild(createCell(row.protocolo));
-          tr.appendChild(createCell(row.siglasHospital, "center"));
-          tr.appendChild(createCell(row.sexo));
-          tr.appendChild(createCell(row.edad));
-          tr.appendChild(createCell(formatInteger(row.numeroPacientes), "num"));
-          tr.appendChild(createCell(formatDecimal(row.mediaMesesSupervivencia), "num"));
-
-          dom.tableBody.appendChild(tr);
-        }
-
-        dom.tableTotalPacientes.textContent = formatInteger(config.table.totalPacientes);
-        dom.tableTotalMedia.textContent = formatDecimal(config.table.mediaSupervivenciaGlobal);
       }
 
       function destroyCharts() {
@@ -1633,15 +1083,6 @@
         }
       }
 
-      // Render switching logic for the full page layout.
-      function applyView(config) {
-        var showSummary = config.vista !== "tabla";
-        var showTable = config.vista !== "dashboard";
-
-        dom.summarySection.classList.toggle("hidden", !showSummary);
-        dom.tableSection.classList.toggle("hidden", !showTable);
-      }
-
       function bindActions() {
         dom.btnClearFilters.addEventListener("click", function () {
           window.location.href = window.location.pathname;
@@ -1652,17 +1093,9 @@
         var params = readQueryParams();
         var config = buildConfigFromQuery(params);
 
-        applyView(config);
-
-        if (config.vista !== "tabla") {
-          renderKpis(config);
-          renderFilterPills(config);
-          await renderCharts(config);
-        }
-
-        if (config.vista !== "dashboard") {
-          renderTable(config);
-        }
+        renderKpis(config);
+        renderFilterPills(config);
+        await renderCharts(config);
       }
 
       bindActions();
