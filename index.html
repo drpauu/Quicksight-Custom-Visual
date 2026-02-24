@@ -118,43 +118,65 @@
       font-variant-numeric: tabular-nums;
     }
 
-    .filter-area {
+    .filters-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1.9fr) repeat(4, minmax(0, 1fr));
+      gap: 8px 10px;
+      align-items: end;
+    }
+
+    .filter-item {
+      min-width: 0;
       display: flex;
       flex-direction: column;
-      align-items: flex-end;
       gap: 4px;
-      min-width: 180px;
+    }
+
+    .filter-item-date .filter-values {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 8px;
+    }
+
+    .filter-label {
+      margin: 0;
       color: var(--ink);
+      font-size: clamp(0.82rem, 1.05vw, 0.97rem);
       font-weight: 700;
-    }
-
-    .filter-pill {
-      border: 0;
-      background: transparent;
-      color: var(--ink);
-      font: inherit;
-      cursor: default;
-      padding: 0;
-      text-align: right;
+      font-family: var(--ui-font);
       white-space: nowrap;
-      font-size: clamp(0.8rem, 1.15vw, 1rem);
     }
 
-    .clear-filters {
-      border: 0;
-      background: transparent;
-      color: var(--ink);
-      font-size: clamp(0.78rem, 1.05vw, 0.94rem);
-      cursor: pointer;
-      text-decoration: underline;
-      padding: 0;
-      margin-top: 2px;
-      align-self: flex-end;
+    .filter-box {
+      min-height: 32px;
+      border: 1px solid #ddd;
+      background: #f4f4f4;
+      color: #525252;
+      font-size: clamp(0.8rem, 1vw, 0.94rem);
+      padding: 6px 30px 6px 10px;
+      display: inline-flex;
+      align-items: center;
+      position: relative;
+      border-radius: 2px;
+      font-family: var(--ui-font);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .clear-filters:hover {
-      opacity: 0.8;
+    .filter-box-select::after {
+      content: "";
+      position: absolute;
+      right: 9px;
+      top: 50%;
+      margin-top: -2px;
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 6px solid #9b9b9b;
     }
+
 
     .charts-grid {
       display: grid;
@@ -286,15 +308,14 @@
         flex: 1 1 100%;
       }
 
-      .filter-area {
-        width: 100%;
-        align-items: flex-start;
+      .filters-panel {
+        grid-template-columns: minmax(0, 1fr);
       }
 
-      .filter-pill,
-      .clear-filters {
-        text-align: left;
+      .filter-item-date .filter-values {
+        grid-template-columns: minmax(0, 1fr);
       }
+
     }
   </style>
 </head>
@@ -317,11 +338,31 @@
               <p class="kpi-value" id="kpiProtocolos">0</p>
             </article>
           </div>
+        </div>
 
-          <div class="filter-area">
-            <button id="filtroGenetica" class="filter-pill" type="button">Info Genetica v</button>
-            <button id="filtroAdicional" class="filter-pill" type="button">Info Adicional v</button>
-            <button id="btnClearFilters" class="clear-filters" type="button">Borrar filtros</button>
+        <div class="filters-panel">
+          <div class="filter-item filter-item-date">
+            <p class="filter-label">Fecha de inicio</p>
+            <div class="filter-values">
+              <span id="filtroFechaInicioDesde" class="filter-box">17/01/2019</span>
+              <span id="filtroFechaInicioHasta" class="filter-box">04/07/2025</span>
+            </div>
+          </div>
+          <div class="filter-item">
+            <p class="filter-label">Fecha de corte</p>
+            <span id="filtroFechaCorte" class="filter-box filter-box-select">15/07/2025</span>
+          </div>
+          <div class="filter-item">
+            <p class="filter-label">Hospital</p>
+            <span id="filtroHospital" class="filter-box filter-box-select">Todas</span>
+          </div>
+          <div class="filter-item">
+            <p class="filter-label">Sexo</p>
+            <span id="filtroSexo" class="filter-box filter-box-select">Todas</span>
+          </div>
+          <div class="filter-item">
+            <p class="filter-label">Tramos de edad</p>
+            <span id="filtroTramosEdad" class="filter-box filter-box-select">Todas</span>
           </div>
         </div>
 
@@ -370,10 +411,12 @@
           protocolos: 240
         },
         filters: {
-          genetica: "Info Genetica",
-          geneticaValor: "",
-          adicional: "Info Adicional",
-          adicionalValor: ""
+          fechaInicioDesde: "17/01/2019",
+          fechaInicioHasta: "04/07/2025",
+          fechaCorte: "15/07/2025",
+          hospital: "Todas",
+          sexo: "Todas",
+          tramosEdad: "Todas"
         },
         line: {
           labels: ["2019", "2020", "2021", "2022", "2023", "2024", "2025"],
@@ -401,9 +444,12 @@
         kpiPacientes: document.getElementById("kpiPacientes"),
         kpiExitos: document.getElementById("kpiExitos"),
         kpiProtocolos: document.getElementById("kpiProtocolos"),
-        filtroGenetica: document.getElementById("filtroGenetica"),
-        filtroAdicional: document.getElementById("filtroAdicional"),
-        btnClearFilters: document.getElementById("btnClearFilters")
+        filtroFechaInicioDesde: document.getElementById("filtroFechaInicioDesde"),
+        filtroFechaInicioHasta: document.getElementById("filtroFechaInicioHasta"),
+        filtroFechaCorte: document.getElementById("filtroFechaCorte"),
+        filtroHospital: document.getElementById("filtroHospital"),
+        filtroSexo: document.getElementById("filtroSexo"),
+        filtroTramosEdad: document.getElementById("filtroTramosEdad")
       };
 
       var rootStyles = window.getComputedStyle(document.documentElement);
@@ -481,11 +527,26 @@
         return value || fallback;
       }
 
-      function readTextParam(params, key, fallback) {
-        if (!params.has(key)) {
+      function normalizeKeyList(keyOrKeys) {
+        return Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
+      }
+
+      function getFirstParamValue(params, keyOrKeys) {
+        var keys = normalizeKeyList(keyOrKeys);
+        for (var i = 0; i < keys.length; i += 1) {
+          if (params.has(keys[i])) {
+            return params.get(keys[i]);
+          }
+        }
+        return null;
+      }
+
+      function readTextParam(params, keyOrKeys, fallback) {
+        var raw = getFirstParamValue(params, keyOrKeys);
+        if (raw === null || raw === undefined) {
           return fallback;
         }
-        return normalizeText(params.get(key), fallback);
+        return normalizeText(raw, fallback);
       }
 
       function parseList(raw) {
@@ -526,11 +587,12 @@
         return text.split(delimiter);
       }
 
-      function readTextList(params, key, fallback) {
-        if (!params.has(key)) {
+      function readTextList(params, keyOrKeys, fallback) {
+        var raw = getFirstParamValue(params, keyOrKeys);
+        if (raw === null || raw === undefined) {
           return fallback.slice();
         }
-        var values = parseList(params.get(key))
+        var values = parseList(raw)
           .map(function (item) {
             return normalizeText(item, "");
           })
@@ -540,11 +602,12 @@
         return values.length ? values : fallback.slice();
       }
 
-      function readNumberList(params, key, fallback) {
-        if (!params.has(key)) {
+      function readNumberList(params, keyOrKeys, fallback) {
+        var raw = getFirstParamValue(params, keyOrKeys);
+        if (raw === null || raw === undefined) {
           return fallback.slice();
         }
-        var rawValues = parseList(params.get(key));
+        var rawValues = parseList(raw);
         if (!rawValues.length) {
           return fallback.slice();
         }
@@ -611,8 +674,8 @@
       }
 
       function buildConfigFromQuery(params) {
-        var lineLabels = readTextList(params, "line_anios", DEFAULTS.line.labels);
-        var lineValues = readNumberList(params, "line_valores", DEFAULTS.line.values);
+        var lineLabels = readTextList(params, ["lineanios", "line_anios"], DEFAULTS.line.labels);
+        var lineValues = readNumberList(params, ["linevalores", "line_valores"], DEFAULTS.line.values);
         var lineSeries = normalizeSingleSeries(
           lineLabels,
           lineValues,
@@ -621,13 +684,13 @@
           2
         );
 
-        var barLabels = readTextList(params, "edad_labels", DEFAULTS.bars.labels);
-        var barHombre = readNumberList(params, "edad_hombres", DEFAULTS.bars.hombre);
-        var barMujer = readNumberList(params, "edad_mujeres", DEFAULTS.bars.mujer);
+        var barLabels = readTextList(params, ["edadlabels", "edad_labels"], DEFAULTS.bars.labels);
+        var barHombre = readNumberList(params, ["edadhombres", "edad_hombres"], DEFAULTS.bars.hombre);
+        var barMujer = readNumberList(params, ["edadmujeres", "edad_mujeres"], DEFAULTS.bars.mujer);
         var barSeries = normalizeGroupedSeries(barLabels, barHombre, barMujer, DEFAULTS.bars);
 
-        var donutLabels = readTextList(params, "hospital_labels", DEFAULTS.donut.labels);
-        var donutValues = readNumberList(params, "hospital_valores", DEFAULTS.donut.values);
+        var donutLabels = readTextList(params, ["hospitallabels", "hospital_labels"], DEFAULTS.donut.labels);
+        var donutValues = readNumberList(params, ["hospitalvalores", "hospital_valores"], DEFAULTS.donut.values);
         var donutSeries = normalizeSingleSeries(
           donutLabels,
           donutValues,
@@ -637,21 +700,47 @@
         );
         var donutColors = normalizeColorList(
           donutSeries.labels,
-          readTextList(params, "hospital_colores", DEFAULTS.donut.colors),
+          readTextList(params, ["hospitalcolores", "hospital_colores"], DEFAULTS.donut.colors),
           DEFAULTS.donut.colors
         );
 
         return {
           kpi: {
-            pacientes: toSafeNumber(readTextParam(params, "num_pacientes", DEFAULTS.kpi.pacientes), DEFAULTS.kpi.pacientes),
-            exitos: toSafeNumber(readTextParam(params, "num_exitos", DEFAULTS.kpi.exitos), DEFAULTS.kpi.exitos),
-            protocolos: toSafeNumber(readTextParam(params, "num_protocolos", DEFAULTS.kpi.protocolos), DEFAULTS.kpi.protocolos)
+            pacientes: toSafeNumber(readTextParam(params, ["numpacientes", "num_pacientes"], DEFAULTS.kpi.pacientes), DEFAULTS.kpi.pacientes),
+            exitos: toSafeNumber(readTextParam(params, ["numexitos", "num_exitos"], DEFAULTS.kpi.exitos), DEFAULTS.kpi.exitos),
+            protocolos: toSafeNumber(readTextParam(params, ["numprotocolos", "num_protocolos"], DEFAULTS.kpi.protocolos), DEFAULTS.kpi.protocolos)
           },
           filters: {
-            genetica: readTextParam(params, "filtro_genetica", DEFAULTS.filters.genetica),
-            geneticaValor: readTextParam(params, "filtro_genetica_valor", DEFAULTS.filters.geneticaValor),
-            adicional: readTextParam(params, "filtro_adicional", DEFAULTS.filters.adicional),
-            adicionalValor: readTextParam(params, "filtro_adicional_valor", DEFAULTS.filters.adicionalValor)
+            fechaInicioDesde: readTextParam(
+              params,
+              ["filtrofechainiciodesde", "fechainiciodesde", "filtro_fecha_inicio_desde"],
+              DEFAULTS.filters.fechaInicioDesde
+            ),
+            fechaInicioHasta: readTextParam(
+              params,
+              ["filtrofechainiciohasta", "fechainiciohasta", "filtro_fecha_inicio_hasta"],
+              DEFAULTS.filters.fechaInicioHasta
+            ),
+            fechaCorte: readTextParam(
+              params,
+              ["filtrofechacorte", "fechacorte", "filtro_fecha_corte"],
+              DEFAULTS.filters.fechaCorte
+            ),
+            hospital: readTextParam(
+              params,
+              ["filtrohospital", "hospital", "filtro_hospital"],
+              DEFAULTS.filters.hospital
+            ),
+            sexo: readTextParam(
+              params,
+              ["filtrosexo", "sexo", "filtro_sexo"],
+              DEFAULTS.filters.sexo
+            ),
+            tramosEdad: readTextParam(
+              params,
+              ["filtrotramosedad", "tramosedad", "filtro_tramos_edad"],
+              DEFAULTS.filters.tramosEdad
+            )
           },
           line: lineSeries,
           bars: barSeries,
@@ -683,18 +772,12 @@
       }
 
       function renderFilterPills(config) {
-        var geneticaText = config.filters.genetica + " v";
-        var adicionalText = config.filters.adicional + " v";
-
-        if (config.filters.geneticaValor) {
-          geneticaText += " " + config.filters.geneticaValor;
-        }
-        if (config.filters.adicionalValor) {
-          adicionalText += " " + config.filters.adicionalValor;
-        }
-
-        dom.filtroGenetica.textContent = geneticaText;
-        dom.filtroAdicional.textContent = adicionalText;
+        dom.filtroFechaInicioDesde.textContent = config.filters.fechaInicioDesde;
+        dom.filtroFechaInicioHasta.textContent = config.filters.fechaInicioHasta;
+        dom.filtroFechaCorte.textContent = config.filters.fechaCorte;
+        dom.filtroHospital.textContent = config.filters.hospital;
+        dom.filtroSexo.textContent = config.filters.sexo;
+        dom.filtroTramosEdad.textContent = config.filters.tramosEdad;
       }
 
       function destroyCharts() {
@@ -1083,12 +1166,6 @@
         }
       }
 
-      function bindActions() {
-        dom.btnClearFilters.addEventListener("click", function () {
-          window.location.href = window.location.pathname;
-        });
-      }
-
       async function init() {
         var params = readQueryParams();
         var config = buildConfigFromQuery(params);
@@ -1098,7 +1175,6 @@
         await renderCharts(config);
       }
 
-      bindActions();
       init();
     })();
   </script>
