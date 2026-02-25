@@ -112,6 +112,8 @@
         <h1 class="title">Curva de Supervivencia - Kaplan Meier</h1>
         <div class="meta">
           <span id="metaPacientes">Pacientes: 0</span>
+          <span id="metaEventos">Eventos: 0</span>
+          <span id="metaCensurados">Censurados: 0</span>
           <span id="metaMediana">Mediana: --</span>
         </div>
       </header>
@@ -136,6 +138,8 @@
           { x: 30, y: 0.49 }
         ],
         totalPatients: 0,
+        totalEvents: 0,
+        totalCensored: 0,
         median: 30
       };
 
@@ -146,6 +150,8 @@
         canvas: document.getElementById("kmChart"),
         error: document.getElementById("chartError"),
         pacientes: document.getElementById("metaPacientes"),
+        eventos: document.getElementById("metaEventos"),
+        censurados: document.getElementById("metaCensurados"),
         mediana: document.getElementById("metaMediana")
       };
 
@@ -153,6 +159,9 @@
       function readQueryParams() {
         return new URLSearchParams(window.location.search);
       }
+
+      // Demo filters accepted directly from QuickSight URL params:
+      // sexo (All/M/F), edadmin (min), edadmax (max), demomodo (1/0).
 
       function normalizeText(input, fallback) {
         if (input === null || input === undefined) {
@@ -284,6 +293,118 @@
         return Number.isFinite(n) && n > 0 ? 1 : 0;
       }
 
+      function makeSeededRandom(seed) {
+        var state = seed % 2147483647;
+        if (state <= 0) {
+          state += 2147483646;
+        }
+        return function () {
+          state = state * 16807 % 2147483647;
+          return (state - 1) / 2147483646;
+        };
+      }
+
+      function readNumberParam(params, keys, fallback) {
+        return toSafeNumber(getFirstParamValue(params, keys), fallback);
+      }
+
+      function normalizeSexoFilter(value) {
+        var key = normalizeText(value, "all").toLowerCase();
+        if (key === "m" || key === "masculino" || key === "male" || key === "hombre") {
+          return "M";
+        }
+        if (key === "f" || key === "femenino" || key === "female" || key === "mujer") {
+          return "F";
+        }
+        return "ALL";
+      }
+
+      function isDemoModeEnabled(params) {
+        var raw = normalizeText(getFirstParamValue(params, ["demomodo", "demomode", "mockmode"]), "1").toLowerCase();
+        return raw !== "0" && raw !== "false" && raw !== "off";
+      }
+
+      function hasPrecomputedCurveParams(params) {
+        var timeRaw = getFirstParamValue(params, ["kmtiempo", "tiempokm"]);
+        var survRaw = getFirstParamValue(params, ["kmsupervivencia", "kmsurv", "supervivenciakm"]);
+        return !!(timeRaw && survRaw);
+      }
+
+      // Hardcoded synthetic table (fixed cohort) for demo without backend.
+      // Structure aligned with KM inputs: cic, meses_supervivencia, exitus_corte
+      // plus helper dimensions for filtering: sexo, edad.
+      function buildHardcodedSyntheticTable5000() {
+        var rng = makeSeededRandom(20260225);
+        var total = 5000;
+        var rows = [];
+
+        for (var i = 0; i < total; i += 1) {
+          var sexo = rng() < 0.52 ? "F" : "M";
+          var edad = Math.floor(30 + rng() * 71); // 30..100
+          var followUp = Math.floor(6 + rng() * 55); // 6..60 meses
+          var ageFactor = (edad - 30) / 70;
+          var monthlyHazard = 0.008 + ageFactor * 0.018 + (sexo === "M" ? 0.003 : 0);
+          var evento = 0;
+          var meses = followUp;
+
+          for (var m = 1; m <= followUp; m += 1) {
+            if (rng() < monthlyHazard) {
+              evento = 1;
+              meses = m;
+              break;
+            }
+          }
+
+          var cic = "demo_" + String(i + 1);
+          var codigopaciente = 100000 + i;
+
+          rows.push({
+            codigopaciente: codigopaciente,
+            cic: cic,
+            sexo: sexo,
+            edad: edad,
+            meses_supervivencia: meses,
+            exitus_corte: evento
+          });
+        }
+
+        return rows;
+      }
+
+      var HARD_CODED_SYNTHETIC_TABLE_5000 = buildHardcodedSyntheticTable5000();
+      window.HARD_CODED_SYNTHETIC_TABLE_5000 = HARD_CODED_SYNTHETIC_TABLE_5000;
+
+      function getDemoFilteredRows(params) {
+        var data = HARD_CODED_SYNTHETIC_TABLE_5000;
+        var sexoFilter = normalizeSexoFilter(getFirstParamValue(params, ["sexo", "filtrosexo"]));
+        var edadMin = readNumberParam(params, ["edadmin", "edad_min"], 0);
+        var edadMax = readNumberParam(params, ["edadmax", "edad_max"], 120);
+
+        if (edadMin > edadMax) {
+          var tmp = edadMin;
+          edadMin = edadMax;
+          edadMax = tmp;
+        }
+
+        var filtered = [];
+        for (var i = 0; i < data.length; i += 1) {
+          var row = data[i];
+          if (sexoFilter !== "ALL" && row.sexo !== sexoFilter) {
+            continue;
+          }
+          if (row.edad < edadMin || row.edad > edadMax) {
+            continue;
+          }
+          filtered.push({
+            cic: row.cic,
+            meses: row.meses_supervivencia,
+            evento: row.exitus_corte
+          });
+        }
+
+        return filtered;
+      }
+
       function readRawRowsFromJson(params) {
         var raw = getFirstParamValue(params, ["kmrows", "kmjson", "datoskm", "rowsjson"]);
         if (raw === null || raw === undefined) {
@@ -396,6 +517,8 @@
           return null;
         }
 
+        var totalEvents = 0;
+        var totalCensored = 0;
         var byTime = {};
         for (var i = 0; i < patients.length; i += 1) {
           var t = patients[i].meses;
@@ -405,8 +528,10 @@
           }
           if (patients[i].evento === 1) {
             byTime[tKey].events += 1;
+            totalEvents += 1;
           } else {
             byTime[tKey].censored += 1;
+            totalCensored += 1;
           }
         }
 
@@ -442,12 +567,14 @@
         return {
           points: points,
           totalPatients: patients.length,
+          totalEvents: totalEvents,
+          totalCensored: totalCensored,
           median: computeMedian(points)
         };
       }
 
       function readPrecomputedCurve(params) {
-        var times = readNumberList(params, ["kmtiempo", "kmtiempo", "tiempokm"]);
+        var times = readNumberList(params, ["kmtiempo", "tiempokm"]);
         var surv = readNumberList(params, ["kmsupervivencia", "kmsurv", "supervivenciakm"]);
 
         var size = Math.min(times.length, surv.length);
@@ -489,13 +616,16 @@
         return {
           points: pairs,
           totalPatients: toSafeNumber(getFirstParamValue(params, ["kmtotalpacientes", "kmtotal"]), 0),
+          totalEvents: toSafeNumber(getFirstParamValue(params, ["kmtotaleventos", "kmeventos"]), 0),
+          totalCensored: toSafeNumber(getFirstParamValue(params, ["kmtotalcensurados", "kmcensurados"]), 0),
           median: computeMedian(pairs)
         };
       }
 
       // Render switching logic:
       // - If raw rows arrive in URL, curve is computed inside the visual.
-      // - If not, visual reads a pre-aggregated KM curve.
+      // - If not, demo mode can generate an embedded filtered cohort (sexo/edadmin/edadmax).
+      // - If demo mode is disabled, visual reads a pre-aggregated KM curve.
       function buildConfigFromQuery(params) {
         var rawRows = readRawRowsFromJson(params);
         if (!rawRows.length) {
@@ -507,6 +637,19 @@
           var computed = computeKaplanMeierFromPatients(patients);
           if (computed) {
             return computed;
+          }
+        }
+
+        if (hasPrecomputedCurveParams(params)) {
+          return readPrecomputedCurve(params);
+        }
+
+        if (isDemoModeEnabled(params)) {
+          var demoRows = getDemoFilteredRows(params);
+          var demoPatients = collapseRowsByPatient(demoRows);
+          var demoComputed = computeKaplanMeierFromPatients(demoPatients);
+          if (demoComputed) {
+            return demoComputed;
           }
         }
 
@@ -529,6 +672,8 @@
 
       function setMeta(config) {
         dom.pacientes.textContent = "Pacientes: " + formatInteger(config.totalPatients || 0);
+        dom.eventos.textContent = "Eventos: " + formatInteger(config.totalEvents || 0);
+        dom.censurados.textContent = "Censurados: " + formatInteger(config.totalCensored || 0);
         dom.mediana.textContent = "Mediana: " + formatMedian(config.median) + " meses";
       }
 
