@@ -3,26 +3,18 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>QuickSight Custom Visual - Dashboard Replica</title>
+  <title>QuickSight Custom Visual - Kaplan Meier</title>
   <style>
     :root {
       --bg: #ededed;
       --panel-bg: #efefef;
-      --card-bg: #dddcd6;
       --ink: #2e3188;
       --text: #4c4c4c;
       --muted: #676767;
       --line: #313286;
-      --male: #312f86;
-      --female: #e783b7;
-      --ring-1: #3fb4ac;
-      --ring-2: #e77fb5;
-      --ring-3: #ff7a00;
-      --ring-4: #9d9a90;
-      --ring-5: #33348f;
-      --kpi-border: #a8a8a3;
+      --median: #c62828;
+      --grid: #d0d0d0;
       --ui-font: "Amazon Ember", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-      --num-font: "Amazon Ember", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     }
 
     * {
@@ -44,171 +36,57 @@
       min-height: 100vh;
     }
 
-    #app {
+    .app {
       flex: 1;
       min-width: 0;
       min-height: 0;
       padding: clamp(6px, 1vw, 14px);
       display: flex;
-      justify-content: center;
-    }
-
-    .dashboard {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: clamp(8px, 1.2vw, 14px);
-      min-width: 0;
-      min-height: 0;
-    }
-
-    .summary {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-width: 0;
-    }
-
-    .top-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 10px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-    }
-
-    .kpi-row {
-      flex: 1;
-      min-width: min(100%, 500px);
-      display: flex;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .kpi-card {
-      flex: 1 1 160px;
-      min-width: 0;
-      background: var(--card-bg);
-      border: 1px solid var(--kpi-border);
-      border-radius: 12px;
-      padding: 8px 12px 10px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      min-height: 72px;
-    }
-
-    .kpi-title {
-      margin: 0;
-      color: var(--muted);
-      font-size: clamp(0.78rem, 1.15vw, 1.02rem);
-      font-weight: 700;
-      font-family: var(--ui-font);
-    }
-
-    .kpi-value {
-      margin: 8px 0 0;
-      color: #2f2f2f;
-      font-size: clamp(1.05rem, 2.7vw, 2.15rem);
-      line-height: 1;
-      font-weight: 700;
-      font-family: var(--num-font);
-      letter-spacing: 0;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .charts-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-      grid-template-areas:
-        "line donut"
-        "bars donut";
-      gap: 8px;
-      min-width: 0;
     }
 
     .panel {
+      flex: 1;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
       background: var(--panel-bg);
       border: 1.5px solid var(--ink);
       border-radius: 22px;
-      padding: 8px 12px 10px;
+      padding: 10px 12px 12px;
+      gap: 8px;
+    }
+
+    .panel-head {
       display: flex;
-      flex-direction: column;
-      min-width: 0;
-      min-height: 0;
-    }
-
-    .panel-title {
-      margin: 0 0 4px;
-      color: var(--ink);
-      text-align: center;
-      font-size: clamp(0.95rem, 1.45vw, 1.95rem);
-      font-weight: 700;
-      letter-spacing: 0;
-      font-family: var(--ui-font);
-    }
-
-    .panel-line {
-      grid-area: line;
-    }
-
-    .panel-bars {
-      grid-area: bars;
-    }
-
-    .panel-donut {
-      grid-area: donut;
-    }
-
-    .legend-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 4px 0 2px;
       flex-wrap: wrap;
-      color: #606060;
-      font-size: clamp(0.76rem, 1.1vw, 0.98rem);
-      font-family: var(--ui-font);
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 10px;
     }
 
-    .legend-item {
+    .title {
+      margin: 0;
+      color: var(--ink);
+      font-size: clamp(1rem, 1.6vw, 1.8rem);
+      font-weight: 700;
+    }
+
+    .meta {
       display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .dot {
-      width: 11px;
-      height: 11px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    .dot-male {
-      background: var(--male);
-    }
-
-    .dot-female {
-      background: var(--female);
+      flex-wrap: wrap;
+      gap: 12px;
+      color: var(--muted);
+      font-size: clamp(0.78rem, 1.1vw, 1rem);
+      font-weight: 700;
     }
 
     .canvas-wrap {
       flex: 1;
       min-height: 0;
-      position: relative;
       width: 100%;
-    }
-    .panel-line .canvas-wrap {
-      height: clamp(190px, 30vh, 300px);
-    }
-
-    .panel-bars .canvas-wrap {
-      height: clamp(170px, 26vh, 260px);
-    }
-
-    .panel-donut .canvas-wrap {
-      height: clamp(360px, 60vh, 600px);
+      position: relative;
+      height: clamp(260px, 70vh, 820px);
     }
 
     canvas {
@@ -221,176 +99,85 @@
       margin: 0;
       color: #8b1d1d;
       font-size: 0.95rem;
-      padding: 10px;
       text-align: center;
-    }
-
-    @media (max-width: 1200px) {
-      .charts-grid {
-        grid-template-columns: 1fr;
-        grid-template-areas:
-          "line"
-          "bars"
-          "donut";
-      }
-
-      .panel-donut .canvas-wrap {
-        height: clamp(280px, 42vh, 420px);
-      }
-    }
-
-    @media (max-width: 680px) {
-      .kpi-row {
-        min-width: 0;
-      }
-
-      .kpi-card {
-        flex: 1 1 100%;
-      }
+      padding: 4px;
+      display: none;
     }
   </style>
 </head>
 <body>
-  <main id="app">
-    <div class="dashboard">
-      <section id="summarySection" class="summary">
-        <div class="top-row">
-          <div class="kpi-row">
-            <article class="kpi-card">
-              <p class="kpi-title">Numero de Pacientes</p>
-              <p class="kpi-value" id="kpiPacientes">0</p>
-            </article>
-            <article class="kpi-card">
-              <p class="kpi-title">Numero de Exitus</p>
-              <p class="kpi-value" id="kpiExitos">0</p>
-            </article>
-            <article class="kpi-card">
-              <p class="kpi-title">Numero de Protocolos</p>
-              <p class="kpi-value" id="kpiProtocolos">0</p>
-            </article>
-          </div>
+  <main class="app">
+    <section class="panel">
+      <header class="panel-head">
+        <h1 class="title">Curva de Supervivencia - Kaplan Meier</h1>
+        <div class="meta">
+          <span id="metaPacientes">Pacientes: 0</span>
+          <span id="metaEventos">Eventos: 0</span>
+          <span id="metaCensurados">Censurados: 0</span>
+          <span id="metaMediana">Mediana: --</span>
         </div>
-
-        <div class="charts-grid">
-          <section class="panel panel-line">
-            <h2 class="panel-title">Numero de pacientes que inician el tratamiento cada anio</h2>
-            <div class="canvas-wrap">
-              <canvas id="lineChart" aria-label="Grafico de linea por anio" role="img"></canvas>
-            </div>
-          </section>
-
-          <section class="panel panel-donut">
-            <h2 class="panel-title">Numero de pacientes tratados por hospital</h2>
-            <div class="canvas-wrap">
-              <canvas id="donutChart" aria-label="Grafico donut por hospital" role="img"></canvas>
-            </div>
-          </section>
-
-          <section class="panel panel-bars">
-            <h2 class="panel-title">Numero de pacientes por edad y sexo</h2>
-            <div class="legend-row">
-              <span class="legend-item"><span class="dot dot-male"></span>Masculino</span>
-              <span class="legend-item"><span class="dot dot-female"></span>Femenino</span>
-            </div>
-            <div class="canvas-wrap">
-              <canvas id="barChart" aria-label="Grafico de barras por edad y sexo" role="img"></canvas>
-            </div>
-          </section>
-        </div>
-      </section>
-    </div>
+      </header>
+      <div class="canvas-wrap">
+        <canvas id="kmChart" aria-label="Curva Kaplan Meier" role="img"></canvas>
+      </div>
+      <p id="chartError" class="chart-error"></p>
+    </section>
   </main>
 
   <script>
     (function () {
       "use strict";
 
-      /*
-       * Defaults based on the reference images.
-       * Every value can be replaced from URL query parameters.
-       */
-      var DEFAULTS = {
-        kpi: {
-          pacientes: 5559,
-          exitus: 3350,
-          protocolos: 240
-        },
-        line: {
-          labels: ["2019", "2020", "2021", "2022", "2023", "2024", "2025"],
-          values: [459, 778, 910, 991, 939, 983, 519]
-        },
-        bars: {
-          labels: ["Menos de 50 anios", "50-59 anios", "60-69 anios", "70-79 anios", "Mas de 80 anios"],
-          hombre: [140, 563, 1351, 1285, 247],
-          mujer: [72, 395, 925, 475, 106]
-        },
-        donut: {
-          labels: ["OD", "HUC", "HUB", "HUA", "HGU"],
-          values: [1660, 1095, 991, 936, 877],
-          colors: ["#3fb4ac", "#e77fb5", "#ff7a00", "#9d9a90", "#33348f"]
-        }
+      var DEFAULT_CURVE = {
+        points: [
+          { x: 0, y: 1 },
+          { x: 6, y: 0.93 },
+          { x: 12, y: 0.82 },
+          { x: 18, y: 0.7 },
+          { x: 24, y: 0.58 },
+          { x: 30, y: 0.49 }
+        ],
+        totalPatients: 0,
+        totalEvents: 0,
+        totalCensored: 0,
+        median: 30
       };
-      var chartInstances = {
-        line: null,
-        bars: null,
-        donut: null
-      };
-      var pluginsRegistered = false;
+
+      var chartInstance = null;
+      var pluginRegistered = false;
 
       var dom = {
-        kpiPacientes: document.getElementById("kpiPacientes"),
-        kpiExitos: document.getElementById("kpiExitos"),
-        kpiProtocolos: document.getElementById("kpiProtocolos")
+        canvas: document.getElementById("kmChart"),
+        error: document.getElementById("chartError"),
+        pacientes: document.getElementById("metaPacientes"),
+        eventos: document.getElementById("metaEventos"),
+        censurados: document.getElementById("metaCensurados"),
+        mediana: document.getElementById("metaMediana")
       };
 
-      var rootStyles = window.getComputedStyle(document.documentElement);
-
-      function cssVar(name, fallback) {
-        var value = rootStyles.getPropertyValue(name);
-        value = value ? String(value).trim() : "";
-        return value || fallback;
-      }
-
-      var THEME = Object.freeze({
-        ink: cssVar("--ink", "#2e3188"),
-        line: cssVar("--line", "#313286"),
-        male: cssVar("--male", "#312f86"),
-        female: cssVar("--female", "#e783b7"),
-        ring1: cssVar("--ring-1", "#3fb4ac"),
-        ring2: cssVar("--ring-2", "#e77fb5"),
-        ring3: cssVar("--ring-3", "#ff7a00"),
-        ring4: cssVar("--ring-4", "#9d9a90"),
-        ring5: cssVar("--ring-5", "#33348f"),
-        axisText: "#5d5d5d",
-        axisGrid: "#d0d0d0",
-        outLabelLine: "#b7b7b7",
-        outLabelText: "#666666",
-        uiFont: cssVar("--ui-font", "Amazon Ember, Segoe UI, Helvetica Neue, Arial, sans-serif"),
-        numFont: cssVar("--num-font", "Amazon Ember, Segoe UI, Helvetica Neue, Arial, sans-serif")
-      });
-
-      // URL parameter parsing entrypoint based on window.location.search.
+      // URL parameter parsing from window.location.search.
       function readQueryParams() {
         return new URLSearchParams(window.location.search);
       }
 
-      /*
-       * Canonical URL params (alphanumeric names):
-       * - KPIs: numpacientes, numexitus, numprotocolos
-       * - Line chart: aniofechainicio, numpacientesanio
-       * - Bar chart: tramoedadgrafico, numpacientesmasculino, numpacientesfemenino
-       * - Donut chart: codhosplista, numpacientescodhosp
-       * - Filters: fechainicio, fechacorte, codhosp, sexo, tramoedad
-       */
+      // Demo filters accepted directly from QuickSight URL params:
+      // sexo (All/M/F), edadmin (min), edadmax (max), demomodo (1/0).
+
+      function normalizeText(input, fallback) {
+        if (input === null || input === undefined) {
+          return fallback;
+        }
+        var value = String(input).replace(/\s+/g, " ").trim();
+        return value || fallback;
+      }
 
       // Numeric validation:
-      // - accepts "1234", "1,5", "1.5", "5.559,2"
-      // - rejects non-finite values and unsafe strings
-      // - returns fallback for invalid data
+      // accepts only safe numeric strings and returns fallback for invalid values.
       function toSafeNumber(input, fallback) {
         if (input === null || input === undefined) {
           return fallback;
         }
+
         var raw = String(input).trim();
         if (!raw) {
           return fallback;
@@ -419,34 +206,14 @@
         return Number.isFinite(parsed) ? parsed : fallback;
       }
 
-      function normalizeText(input, fallback) {
-        if (input === null || input === undefined) {
-          return fallback;
-        }
-        var value = String(input).replace(/\s+/g, " ").trim();
-        return value || fallback;
-      }
-
-      function normalizeKeyList(keyOrKeys) {
-        return Array.isArray(keyOrKeys) ? keyOrKeys : [keyOrKeys];
-      }
-
-      function getFirstParamValue(params, keyOrKeys) {
-        var keys = normalizeKeyList(keyOrKeys);
-        for (var i = 0; i < keys.length; i += 1) {
-          if (params.has(keys[i])) {
-            return params.get(keys[i]);
+      function getFirstParamValue(params, keys) {
+        var keyList = Array.isArray(keys) ? keys : [keys];
+        for (var i = 0; i < keyList.length; i += 1) {
+          if (params.has(keyList[i])) {
+            return params.get(keyList[i]);
           }
         }
         return null;
-      }
-
-      function readTextParam(params, keyOrKeys, fallback) {
-        var raw = getFirstParamValue(params, keyOrKeys);
-        if (raw === null || raw === undefined) {
-          return fallback;
-        }
-        return normalizeText(raw, fallback);
       }
 
       function parseList(raw) {
@@ -465,7 +232,7 @@
             return parsedJson;
           }
         } catch (errorA) {
-          // Ignore and continue with other formats.
+          // keep trying
         }
 
         try {
@@ -475,7 +242,7 @@
             return parsedBase64;
           }
         } catch (errorB) {
-          // Ignore and continue with delimited list parsing.
+          // keep trying
         }
 
         var delimiter = ",";
@@ -484,812 +251,499 @@
         } else if (text.indexOf(";") > -1) {
           delimiter = ";";
         }
+
         return text.split(delimiter);
       }
 
-      function readTextList(params, keyOrKeys, fallback) {
-        var raw = getFirstParamValue(params, keyOrKeys);
+      function readTextList(params, keys) {
+        var raw = getFirstParamValue(params, keys);
         if (raw === null || raw === undefined) {
-          return fallback.slice();
+          return [];
         }
-        var values = parseList(raw)
+
+        return parseList(raw)
           .map(function (item) {
             return normalizeText(item, "");
           })
           .filter(function (item) {
             return item.length > 0;
           });
-        return values.length ? values : fallback.slice();
       }
 
-      function readNumberList(params, keyOrKeys, fallback) {
-        var raw = getFirstParamValue(params, keyOrKeys);
+      function readNumberList(params, keys) {
+        var raw = getFirstParamValue(params, keys);
         if (raw === null || raw === undefined) {
-          return fallback.slice();
-        }
-        var rawValues = parseList(raw);
-        if (!rawValues.length) {
-          return fallback.slice();
+          return [];
         }
 
-        var result = [];
-        for (var i = 0; i < rawValues.length; i += 1) {
-          var value = toSafeNumber(rawValues[i], Number.NaN);
-          if (!Number.isFinite(value)) {
-            return fallback.slice();
-          }
-          result.push(value);
-        }
-        return result;
-      }
-
-      function normalizeSingleSeries(labels, values, fallbackLabels, fallbackValues, minLen) {
-        var size = Math.min(labels.length, values.length);
-        if (size < minLen) {
-          return {
-            labels: fallbackLabels.slice(),
-            values: fallbackValues.slice()
-          };
-        }
-        return {
-          labels: labels.slice(0, size),
-          values: values.slice(0, size)
-        };
-      }
-
-      function normalizeGroupedSeries(labels, first, second, fallback) {
-        var size = Math.min(labels.length, first.length, second.length);
-        if (size < 1) {
-          return {
-            labels: fallback.labels.slice(),
-            first: fallback.hombre.slice(),
-            second: fallback.mujer.slice()
-          };
-        }
-        return {
-          labels: labels.slice(0, size),
-          first: first.slice(0, size),
-          second: second.slice(0, size)
-        };
-      }
-
-      function buildDonutColorList(labels, hospitalCodes) {
-        var palette = [
-          THEME.ring1, // teal
-          THEME.ring2, // pink
-          THEME.ring3, // orange
-          THEME.ring4, // gray
-          THEME.ring5  // blue
-        ];
-
-        // Keep exact reference color mapping for known hospitals.
-        var fixedByHospital = {
-          od: THEME.ring1,
-          huc: THEME.ring2,
-          hub: THEME.ring3,
-          hua: THEME.ring4,
-          hgu: THEME.ring5
-        };
-
+        var values = parseList(raw);
         var output = [];
-        for (var i = 0; i < labels.length; i += 1) {
-          var labelToken = normalizeCompactToken(labels[i]);
-          var codeToken = normalizeCompactToken(hospitalCodes[i] || "");
-          var labelNoH = labelToken.replace(/^h+/, "");
-          var codeNoH = codeToken.replace(/^h+/, "");
-          var mapped =
-            fixedByHospital[labelToken] ||
-            fixedByHospital[codeToken] ||
-            fixedByHospital[labelNoH] ||
-            fixedByHospital[codeNoH];
-
-          output.push(mapped || palette[i % palette.length]);
+        for (var i = 0; i < values.length; i += 1) {
+          var n = toSafeNumber(values[i], Number.NaN);
+          if (!Number.isFinite(n)) {
+            continue;
+          }
+          output.push(n);
         }
-
         return output;
       }
 
-      function normalizeFilterText(value) {
-        return String(value || "")
-          .trim()
-          .toLowerCase()
-          .replace(/\s+/g, " ");
+      function toBinaryEvent(value) {
+        var n = toSafeNumber(value, Number.NaN);
+        return Number.isFinite(n) && n > 0 ? 1 : 0;
       }
 
-      function parseFilterTokens(value) {
-        if (isAllFilter(value)) {
+      function makeSeededRandom(seed) {
+        var state = seed % 2147483647;
+        if (state <= 0) {
+          state += 2147483646;
+        }
+        return function () {
+          state = state * 16807 % 2147483647;
+          return (state - 1) / 2147483646;
+        };
+      }
+
+      function readNumberParam(params, keys, fallback) {
+        return toSafeNumber(getFirstParamValue(params, keys), fallback);
+      }
+
+      function normalizeSexoFilter(value) {
+        var key = normalizeText(value, "all").toLowerCase();
+        if (key === "m" || key === "masculino" || key === "male" || key === "hombre") {
+          return "M";
+        }
+        if (key === "f" || key === "femenino" || key === "female" || key === "mujer") {
+          return "F";
+        }
+        return "ALL";
+      }
+
+      function isDemoModeEnabled(params) {
+        var raw = normalizeText(getFirstParamValue(params, ["demomodo", "demomode", "mockmode"]), "1").toLowerCase();
+        return raw !== "0" && raw !== "false" && raw !== "off";
+      }
+
+      function hasPrecomputedCurveParams(params) {
+        var timeRaw = getFirstParamValue(params, ["kmtiempo", "tiempokm"]);
+        var survRaw = getFirstParamValue(params, ["kmsupervivencia", "kmsurv", "supervivenciakm"]);
+        return !!(timeRaw && survRaw);
+      }
+
+      // Hardcoded synthetic table (fixed cohort) for demo without backend.
+      // Structure aligned with KM inputs: cic, meses_supervivencia, exitus_corte
+      // plus helper dimensions for filtering: sexo, edad.
+      function buildHardcodedSyntheticTable5000() {
+        var rng = makeSeededRandom(20260225);
+        var total = 5000;
+        var rows = [];
+
+        for (var i = 0; i < total; i += 1) {
+          var sexo = rng() < 0.52 ? "F" : "M";
+          var edad = Math.floor(30 + rng() * 71); // 30..100
+          var followUp = Math.floor(6 + rng() * 55); // 6..60 meses
+          var ageFactor = (edad - 30) / 70;
+          var monthlyHazard = 0.008 + ageFactor * 0.018 + (sexo === "M" ? 0.003 : 0);
+          var evento = 0;
+          var meses = followUp;
+
+          for (var m = 1; m <= followUp; m += 1) {
+            if (rng() < monthlyHazard) {
+              evento = 1;
+              meses = m;
+              break;
+            }
+          }
+
+          var cic = "demo_" + String(i + 1);
+          var codigopaciente = 100000 + i;
+
+          rows.push({
+            codigopaciente: codigopaciente,
+            cic: cic,
+            sexo: sexo,
+            edad: edad,
+            meses_supervivencia: meses,
+            exitus_corte: evento
+          });
+        }
+
+        return rows;
+      }
+
+      var HARD_CODED_SYNTHETIC_TABLE_5000 = buildHardcodedSyntheticTable5000();
+      window.HARD_CODED_SYNTHETIC_TABLE_5000 = HARD_CODED_SYNTHETIC_TABLE_5000;
+
+      function getDemoFilteredRows(params) {
+        var data = HARD_CODED_SYNTHETIC_TABLE_5000;
+        var sexoFilter = normalizeSexoFilter(getFirstParamValue(params, ["sexo", "filtrosexo"]));
+        var edadMin = readNumberParam(params, ["edadmin", "edad_min"], 0);
+        var edadMax = readNumberParam(params, ["edadmax", "edad_max"], 120);
+
+        if (edadMin > edadMax) {
+          var tmp = edadMin;
+          edadMin = edadMax;
+          edadMax = tmp;
+        }
+
+        var filtered = [];
+        for (var i = 0; i < data.length; i += 1) {
+          var row = data[i];
+          if (sexoFilter !== "ALL" && row.sexo !== sexoFilter) {
+            continue;
+          }
+          if (row.edad < edadMin || row.edad > edadMax) {
+            continue;
+          }
+          filtered.push({
+            cic: row.cic,
+            meses: row.meses_supervivencia,
+            evento: row.exitus_corte
+          });
+        }
+
+        return filtered;
+      }
+
+      function readRawRowsFromJson(params) {
+        var raw = getFirstParamValue(params, ["kmrows", "kmjson", "datoskm", "rowsjson"]);
+        if (raw === null || raw === undefined) {
           return [];
         }
-        return normalizeFilterText(value)
-          .split(/[|,;]/)
-          .map(function (token) {
-            return token.trim();
-          })
-          .filter(function (token) {
-            return token.length > 0;
+
+        var parsed = parseList(raw);
+        if (!parsed.length || typeof parsed[0] !== "object") {
+          return [];
+        }
+
+        var rows = [];
+        for (var i = 0; i < parsed.length; i += 1) {
+          var current = parsed[i];
+          if (!current || typeof current !== "object") {
+            continue;
+          }
+
+          var cic = normalizeText(
+            current.cic || current.CIC || current.codigopaciente || current.CODIGOPACIENTE || ("p" + String(i + 1)),
+            "p" + String(i + 1)
+          );
+          var mesesRaw = current.mesessupervivencia || current.meses_supervivencia || current.MESES_SUPERVIVENCIA;
+          var eventoRaw = current.exituscorte || current.exitus_corte || current.EXITUS_CORTE;
+          var meses = toSafeNumber(mesesRaw, Number.NaN);
+
+          if (!Number.isFinite(meses) || meses < 0) {
+            continue;
+          }
+
+          rows.push({
+            cic: cic,
+            meses: meses,
+            evento: toBinaryEvent(eventoRaw)
           });
-      }
-
-      function normalizeCompactToken(value) {
-        return normalizeFilterText(value).replace(/[^a-z0-9]/g, "");
-      }
-
-      function isAllFilter(value) {
-        var v = normalizeFilterText(value);
-        return !v || v === "todas" || v === "todos" || v === "all";
-      }
-
-      function parseDateInput(value) {
-        var text = String(value || "").trim();
-        if (!text) {
-          return null;
         }
 
-        var dmy = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/.exec(text);
-        if (dmy) {
-          var day = Number(dmy[1]);
-          var month = Number(dmy[2]);
-          var year = Number(dmy[3]);
-          if (year > 1900 && month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-            return new Date(year, month - 1, day);
+        return rows;
+      }
+
+      function readRawRowsFromColumns(params) {
+        var cicList = readTextList(params, ["kmcic", "datoscic", "cic"]);
+        var mesesList = readNumberList(params, ["kmmeses", "datoskmmeses", "mesessupervivencia"]);
+        var eventoList = readTextList(params, ["kmevento", "datoskmevento", "exituscorte"]);
+
+        var size = Math.max(cicList.length, mesesList.length, eventoList.length);
+        if (size < 1) {
+          return [];
+        }
+
+        var rows = [];
+        for (var i = 0; i < size; i += 1) {
+          var meses = toSafeNumber(mesesList[i], Number.NaN);
+          if (!Number.isFinite(meses) || meses < 0) {
+            continue;
+          }
+
+          rows.push({
+            cic: normalizeText(cicList[i], "p" + String(i + 1)),
+            meses: meses,
+            evento: toBinaryEvent(eventoList[i])
+          });
+        }
+
+        return rows;
+      }
+
+      function collapseRowsByPatient(rows) {
+        var map = {};
+        for (var i = 0; i < rows.length; i += 1) {
+          var row = rows[i];
+          var key = normalizeText(row.cic, "p" + String(i + 1));
+
+          if (!map[key]) {
+            map[key] = {
+              cic: key,
+              meses: row.meses,
+              evento: row.evento
+            };
+            continue;
+          }
+
+          if (row.meses > map[key].meses) {
+            map[key].meses = row.meses;
+          }
+          if (row.evento > map[key].evento) {
+            map[key].evento = row.evento;
           }
         }
 
-        var ymd = /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/.exec(text);
-        if (ymd) {
-          var y = Number(ymd[1]);
-          var m = Number(ymd[2]);
-          var d = Number(ymd[3]);
-          if (y > 1900 && m >= 1 && m <= 12 && d >= 1 && d <= 31) {
-            return new Date(y, m - 1, d);
+        var patients = [];
+        var keys = Object.keys(map);
+        for (var j = 0; j < keys.length; j += 1) {
+          patients.push(map[keys[j]]);
+        }
+        return patients;
+      }
+
+      function computeMedian(points) {
+        for (var i = 0; i < points.length; i += 1) {
+          if (points[i].y <= 0.5) {
+            return points[i].x;
           }
         }
-
         return null;
       }
 
-      function parseYearFromLabel(label) {
-        var match = String(label || "").match(/(19|20)\d{2}/);
-        return match ? Number(match[0]) : null;
-      }
+      function computeKaplanMeierFromPatients(patients) {
+        if (!patients.length) {
+          return null;
+        }
 
-      function applySeriesFilters(baseConfig, filters) {
-        var lineLabels = baseConfig.line.labels.slice();
-        var lineValues = baseConfig.line.values.slice();
-        var barLabels = baseConfig.bars.labels.slice();
-        var barHombre = baseConfig.bars.first.slice();
-        var barMujer = baseConfig.bars.second.slice();
-        var donutLabels = baseConfig.donut.labels.slice();
-        var donutValues = baseConfig.donut.values.slice();
-        var donutColors = baseConfig.donut.colors.slice();
-        var donutCodes = filters.hospitalCodes.slice();
-
-        // Filter line chart by date range using year labels:
-        // X axis = anio_fecha_inicio, Y axis = numero de pacientes.
-        var fromDate = parseDateInput(filters.fechaInicio);
-        var toDate = parseDateInput(filters.fechaCorte) || parseDateInput(filters.fechaInicioHasta);
-        if (fromDate || toDate) {
-          var filteredLineLabels = [];
-          var filteredLineValues = [];
-          for (var i = 0; i < lineLabels.length; i += 1) {
-            var year = parseYearFromLabel(lineLabels[i]);
-            if (year === null) {
-              continue;
-            }
-            var allowed = true;
-            if (fromDate && year < fromDate.getFullYear()) {
-              allowed = false;
-            }
-            if (toDate && year > toDate.getFullYear()) {
-              allowed = false;
-            }
-            if (allowed) {
-              filteredLineLabels.push(lineLabels[i]);
-              filteredLineValues.push(lineValues[i]);
-            }
+        var totalEvents = 0;
+        var totalCensored = 0;
+        var byTime = {};
+        for (var i = 0; i < patients.length; i += 1) {
+          var t = patients[i].meses;
+          var tKey = String(t);
+          if (!byTime[tKey]) {
+            byTime[tKey] = { events: 0, censored: 0, time: t };
           }
-          if (filteredLineLabels.length >= 2) {
-            lineLabels = filteredLineLabels;
-            lineValues = filteredLineValues;
+          if (patients[i].evento === 1) {
+            byTime[tKey].events += 1;
+            totalEvents += 1;
+          } else {
+            byTime[tKey].censored += 1;
+            totalCensored += 1;
           }
         }
 
-        // Filter bars by tramoedad.
-        var tramoTokens = parseFilterTokens(filters.tramoEdad);
-        if (tramoTokens.length) {
-          var filteredBarLabels = [];
-          var filteredBarH = [];
-          var filteredBarM = [];
-          for (var j = 0; j < barLabels.length; j += 1) {
-            var labelKey = normalizeFilterText(barLabels[j]);
-            var match = tramoTokens.indexOf(labelKey) > -1;
-            if (!match) {
-              for (var k = 0; k < tramoTokens.length; k += 1) {
-                if (labelKey.indexOf(tramoTokens[k]) > -1 || tramoTokens[k].indexOf(labelKey) > -1) {
-                  match = true;
-                  break;
-                }
-              }
-            }
-            if (match) {
-              filteredBarLabels.push(barLabels[j]);
-              filteredBarH.push(barHombre[j]);
-              filteredBarM.push(barMujer[j]);
-            }
-          }
-          if (filteredBarLabels.length) {
-            barLabels = filteredBarLabels;
-            barHombre = filteredBarH;
-            barMujer = filteredBarM;
-          }
-        }
+        var orderedTimes = Object.keys(byTime)
+          .map(function (key) {
+            return byTime[key].time;
+          })
+          .sort(function (a, b) {
+            return a - b;
+          });
 
-        // Filter bars by sexo by zeroing opposite series.
-        var sexoKey = normalizeFilterText(filters.sexo);
-        if (sexoKey === "masculino" || sexoKey === "hombre" || sexoKey === "male" || sexoKey === "1") {
-          barMujer = barMujer.map(function () { return 0; });
-        } else if (sexoKey === "femenino" || sexoKey === "mujer" || sexoKey === "female" || sexoKey === "2") {
-          barHombre = barHombre.map(function () { return 0; });
-        }
+        var nAtRisk = patients.length;
+        var surv = 1;
+        var points = [{ x: 0, y: 1 }];
 
-        // Filter donut by hospital/codhosp if provided.
-        var hospitalTokens = parseFilterTokens(filters.hospital);
-        if (hospitalTokens.length) {
-          var filteredDonutLabels = [];
-          var filteredDonutValues = [];
-          var filteredDonutColors = [];
+        for (var j = 0; j < orderedTimes.length; j += 1) {
+          var time = orderedTimes[j];
+          var bucket = byTime[String(time)];
+          var d = bucket.events;
+          var c = bucket.censored;
 
-          for (var x = 0; x < donutLabels.length; x += 1) {
-            var labelNorm = normalizeFilterText(donutLabels[x]);
-            var codeNorm = normalizeFilterText(donutCodes[x] || "");
-            var labelCompact = normalizeCompactToken(labelNorm);
-            var codeCompact = normalizeCompactToken(codeNorm);
-            var labelNoH = labelCompact.replace(/^h+/, "");
-            var codeNoH = codeCompact.replace(/^h+/, "");
-            var matchesHospital = false;
-
-            for (var h = 0; h < hospitalTokens.length; h += 1) {
-              var token = hospitalTokens[h];
-              var tokenCompact = normalizeCompactToken(token);
-              var tokenNoH = tokenCompact.replace(/^h+/, "");
-              if (
-                labelNorm === token ||
-                codeNorm === token ||
-                labelCompact === tokenCompact ||
-                codeCompact === tokenCompact ||
-                labelNoH === tokenNoH ||
-                codeNoH === tokenNoH
-              ) {
-                matchesHospital = true;
-                break;
-              }
-            }
-
-            if (matchesHospital) {
-              filteredDonutLabels.push(donutLabels[x]);
-              filteredDonutValues.push(donutValues[x]);
-              filteredDonutColors.push(donutColors[x]);
-            }
+          if (nAtRisk > 0 && d > 0) {
+            surv = surv * (1 - d / nAtRisk);
           }
 
-          if (filteredDonutLabels.length) {
-            donutLabels = filteredDonutLabels;
-            donutValues = filteredDonutValues;
-            donutColors = filteredDonutColors;
+          points.push({ x: time, y: surv });
+          nAtRisk -= (d + c);
+          if (nAtRisk < 0) {
+            nAtRisk = 0;
           }
         }
 
         return {
-          line: {
-            labels: lineLabels,
-            values: lineValues
-          },
-          bars: {
-            labels: barLabels,
-            first: barHombre,
-            second: barMujer
-          },
-          donut: {
-            labels: donutLabels,
-            values: donutValues,
-            colors: donutColors
-          }
+          points: points,
+          totalPatients: patients.length,
+          totalEvents: totalEvents,
+          totalCensored: totalCensored,
+          median: computeMedian(points)
         };
       }
 
+      function readPrecomputedCurve(params) {
+        var times = readNumberList(params, ["kmtiempo", "tiempokm"]);
+        var surv = readNumberList(params, ["kmsupervivencia", "kmsurv", "supervivenciakm"]);
+
+        var size = Math.min(times.length, surv.length);
+        if (size < 2) {
+          return DEFAULT_CURVE;
+        }
+
+        var pairs = [];
+        for (var i = 0; i < size; i += 1) {
+          var t = toSafeNumber(times[i], Number.NaN);
+          var s = toSafeNumber(surv[i], Number.NaN);
+          if (!Number.isFinite(t) || !Number.isFinite(s)) {
+            continue;
+          }
+          if (t < 0) {
+            continue;
+          }
+          if (s < 0) {
+            s = 0;
+          }
+          if (s > 1) {
+            s = 1;
+          }
+          pairs.push({ x: t, y: s });
+        }
+
+        if (pairs.length < 2) {
+          return DEFAULT_CURVE;
+        }
+
+        pairs.sort(function (a, b) {
+          return a.x - b.x;
+        });
+
+        if (pairs[0].x > 0) {
+          pairs.unshift({ x: 0, y: 1 });
+        }
+
+        return {
+          points: pairs,
+          totalPatients: toSafeNumber(getFirstParamValue(params, ["kmtotalpacientes", "kmtotal"]), 0),
+          totalEvents: toSafeNumber(getFirstParamValue(params, ["kmtotaleventos", "kmeventos"]), 0),
+          totalCensored: toSafeNumber(getFirstParamValue(params, ["kmtotalcensurados", "kmcensurados"]), 0),
+          median: computeMedian(pairs)
+        };
+      }
+
+      // Render switching logic:
+      // - If raw rows arrive in URL, curve is computed inside the visual.
+      // - If not, demo mode can generate an embedded filtered cohort (sexo/edadmin/edadmax).
+      // - If demo mode is disabled, visual reads a pre-aggregated KM curve.
       function buildConfigFromQuery(params) {
-        // Chart mappings requested:
-        // - Line: X=anio_fecha_inicio, Y=numero de pacientes
-        // - Bars: X=tramo edad, Y=numero de pacientes (Masculino/Femenino)
-        // - Donut: codhosp vs numero de pacientes
-        var lineLabels = readTextList(
-          params,
-          ["aniofechainicio", "anioinicio", "lineanios", "line_anios"],
-          DEFAULTS.line.labels
-        );
-        var lineValues = readNumberList(
-          params,
-          ["numpacientesanio", "numpacienteslinea", "linevalores", "line_valores"],
-          DEFAULTS.line.values
-        );
-        var lineSeries = normalizeSingleSeries(
-          lineLabels,
-          lineValues,
-          DEFAULTS.line.labels,
-          DEFAULTS.line.values,
-          2
-        );
+        var rawRows = readRawRowsFromJson(params);
+        if (!rawRows.length) {
+          rawRows = readRawRowsFromColumns(params);
+        }
 
-        var barLabels = readTextList(
-          params,
-          ["tramoedadgrafico", "tramoedadlabels", "edadlabels", "edad_labels"],
-          DEFAULTS.bars.labels
-        );
-        var barHombre = readNumberList(
-          params,
-          ["numpacientesmasculino", "numpacienteshombre", "edadhombres", "edad_hombres"],
-          DEFAULTS.bars.hombre
-        );
-        var barMujer = readNumberList(
-          params,
-          ["numpacientesfemenino", "numpacientesmujer", "edadmujeres", "edad_mujeres"],
-          DEFAULTS.bars.mujer
-        );
-        var barSeries = normalizeGroupedSeries(barLabels, barHombre, barMujer, DEFAULTS.bars);
-
-        var donutLabels = readTextList(
-          params,
-          ["codhosplista", "codhosplabels", "hospitallabels", "hospital_labels"],
-          DEFAULTS.donut.labels
-        );
-        var donutValues = readNumberList(
-          params,
-          ["numpacientescodhosp", "numpacienteshospital", "hospitalvalores", "hospital_valores"],
-          DEFAULTS.donut.values
-        );
-        var donutSeries = normalizeSingleSeries(
-          donutLabels,
-          donutValues,
-          DEFAULTS.donut.labels,
-          DEFAULTS.donut.values,
-          1
-        );
-        var hospitalCodes = readTextList(
-          params,
-          ["codhospcodigos", "hospitalcodigos", "hospitalcods", "hospital_codes"],
-          []
-        );
-        var donutColors = buildDonutColorList(donutSeries.labels, hospitalCodes);
-        var hospitalFilter = readTextParam(
-          params,
-          ["codhosp", "hospitalfiltro", "filtrohospital", "hospital", "hospitalid"],
-          "Todas"
-        );
-        var sexoFilter = readTextParam(params, ["sexo", "Sexo", "filtrosexo"], "Todas");
-        var tramoEdadFilter = readTextParam(params, ["tramoedad", "filtrotramoedad", "filtrotramosedad"], "Todas");
-        var fechaInicio = readTextParam(
-          params,
-          ["fechainicio", "fechainiciodesde", "filtrofechainicio", "filtrofechainiciodesde"],
-          ""
-        );
-        var fechaInicioHasta = readTextParam(params, ["fechainiciohasta", "filtrofechainiciohasta"], "");
-        var fechaCorte = readTextParam(params, ["fechacorte", "filtrofechacorte"], "");
-
-        var filteredSeries = applySeriesFilters(
-          {
-            line: lineSeries,
-            bars: barSeries,
-            donut: {
-              labels: donutSeries.labels,
-              values: donutSeries.values,
-              colors: donutColors
-            }
-          },
-          {
-            hospital: hospitalFilter,
-            sexo: sexoFilter,
-            tramoEdad: tramoEdadFilter,
-            fechaInicio: fechaInicio,
-            fechaInicioHasta: fechaInicioHasta,
-            fechaCorte: fechaCorte,
-            hospitalCodes: hospitalCodes
+        if (rawRows.length) {
+          var patients = collapseRowsByPatient(rawRows);
+          var computed = computeKaplanMeierFromPatients(patients);
+          if (computed) {
+            return computed;
           }
-        );
+        }
 
-        return {
-          kpi: {
-            pacientes: toSafeNumber(readTextParam(params, ["numpacientes", "num_pacientes"], DEFAULTS.kpi.pacientes), DEFAULTS.kpi.pacientes),
-            exitus: toSafeNumber(
-              readTextParam(params, ["numexitus", "numexitos", "num_exitus", "num_exitos"], DEFAULTS.kpi.exitus),
-              DEFAULTS.kpi.exitus
-            ),
-            protocolos: toSafeNumber(readTextParam(params, ["numprotocolos", "num_protocolos"], DEFAULTS.kpi.protocolos), DEFAULTS.kpi.protocolos)
-          },
-          line: filteredSeries.line,
-          bars: filteredSeries.bars,
-          donut: filteredSeries.donut
-        };
+        if (hasPrecomputedCurveParams(params)) {
+          return readPrecomputedCurve(params);
+        }
+
+        if (isDemoModeEnabled(params)) {
+          var demoRows = getDemoFilteredRows(params);
+          var demoPatients = collapseRowsByPatient(demoRows);
+          var demoComputed = computeKaplanMeierFromPatients(demoPatients);
+          if (demoComputed) {
+            return demoComputed;
+          }
+        }
+
+        return readPrecomputedCurve(params);
       }
 
       function formatInteger(value) {
+        return new Intl.NumberFormat("es-ES", { maximumFractionDigits: 0 }).format(value);
+      }
+
+      function formatMedian(value) {
+        if (!Number.isFinite(value)) {
+          return "--";
+        }
         return new Intl.NumberFormat("es-ES", {
-          maximumFractionDigits: 0
+          minimumFractionDigits: value % 1 === 0 ? 0 : 1,
+          maximumFractionDigits: 2
         }).format(value);
       }
 
-      function formatPercent(value) {
-        return new Intl.NumberFormat("es-ES", {
-          minimumFractionDigits: 1,
-          maximumFractionDigits: 1
-        }).format(value);
+      function setMeta(config) {
+        dom.pacientes.textContent = "Pacientes: " + formatInteger(config.totalPatients || 0);
+        dom.eventos.textContent = "Eventos: " + formatInteger(config.totalEvents || 0);
+        dom.censurados.textContent = "Censurados: " + formatInteger(config.totalCensored || 0);
+        dom.mediana.textContent = "Mediana: " + formatMedian(config.median) + " meses";
       }
 
-      function renderKpis(config) {
-        dom.kpiPacientes.textContent = formatInteger(config.kpi.pacientes);
-        dom.kpiExitos.textContent = formatInteger(config.kpi.exitus);
-        dom.kpiProtocolos.textContent = formatInteger(config.kpi.protocolos);
+      function showError(message) {
+        dom.error.textContent = message;
+        dom.error.style.display = "block";
       }
 
-      function destroyCharts() {
-        if (chartInstances.line) {
-          chartInstances.line.destroy();
-          chartInstances.line = null;
-        }
-        if (chartInstances.bars) {
-          chartInstances.bars.destroy();
-          chartInstances.bars = null;
-        }
-        if (chartInstances.donut) {
-          chartInstances.donut.destroy();
-          chartInstances.donut = null;
-        }
-      }
-
-      function showChartError(canvasId, message) {
-        var canvas = document.getElementById(canvasId);
-        if (!canvas) {
-          return;
-        }
-        var wrapper = canvas.parentElement;
-        canvas.remove();
-        var text = document.createElement("p");
-        text.className = "chart-error";
-        text.textContent = message;
-        wrapper.appendChild(text);
-      }
-
-      function buildValueLabelPlugin() {
-        return {
-          id: "valueLabels",
-          afterDatasetsDraw: function (chart, args, pluginOptions) {
-            if (!pluginOptions || pluginOptions.enabled === false) {
-              return;
-            }
-
-            var mode = pluginOptions.mode || chart.config.type;
-            var ctx = chart.ctx;
-            ctx.save();
-            ctx.fillStyle = pluginOptions.color || THEME.axisText;
-            ctx.font = pluginOptions.font || ("600 12px " + THEME.numFont);
-
-            if (mode === "line") {
-              var lineDataset = chart.data.datasets[0];
-              var lineMeta = chart.getDatasetMeta(0);
-              lineMeta.data.forEach(function (point, index) {
-                var value = lineDataset.data[index];
-                var offset = (index === 0 || index === lineDataset.data.length - 1) ? 18 : -14;
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText(formatInteger(value), point.x, point.y + offset);
-              });
-            }
-
-            if (mode === "bar") {
-              chart.data.datasets.forEach(function (dataset, datasetIndex) {
-                var barsMeta = chart.getDatasetMeta(datasetIndex);
-                barsMeta.data.forEach(function (bar, dataIndex) {
-                  var value = dataset.data[dataIndex];
-                  ctx.textAlign = "center";
-                  ctx.textBaseline = "middle";
-                  ctx.fillText(formatInteger(value), bar.x, bar.y - 10);
-                });
-              });
-            }
-
-            ctx.restore();
-          }
-        };
-      }
-
-      function buildDonutLabelPlugin() {
-        return {
-          id: "donutOutLabels",
-          afterDatasetDraw: function (chart, args, pluginOptions) {
-            if (!pluginOptions || pluginOptions.enabled === false) {
-              return;
-            }
-            if (chart.config.type !== "doughnut") {
-              return;
-            }
-
-            var dataset = chart.data.datasets[0];
-            var total = dataset.data.reduce(function (sum, value) {
-              return sum + value;
-            }, 0);
-            if (total <= 0) {
-              return;
-            }
-
-            var meta = chart.getDatasetMeta(0);
-            var ctx = chart.ctx;
-            ctx.save();
-            ctx.strokeStyle = pluginOptions.lineColor || THEME.outLabelLine;
-            ctx.fillStyle = pluginOptions.textColor || THEME.outLabelText;
-            ctx.lineWidth = 1;
-            ctx.font = pluginOptions.font || ("500 11px " + THEME.uiFont);
-
-            meta.data.forEach(function (arc, index) {
-              var value = Number(dataset.data[index]);
-              if (!Number.isFinite(value) || value <= 0) {
-                return;
-              }
-
-              var midAngle = (arc.startAngle + arc.endAngle) / 2;
-              var cx = arc.x;
-              var cy = arc.y;
-              var x1 = cx + Math.cos(midAngle) * (arc.outerRadius + 4);
-              var y1 = cy + Math.sin(midAngle) * (arc.outerRadius + 4);
-              var x2 = cx + Math.cos(midAngle) * (arc.outerRadius + 18);
-              var y2 = cy + Math.sin(midAngle) * (arc.outerRadius + 18);
-              var rightSide = Math.cos(midAngle) >= 0;
-              var x3 = x2 + (rightSide ? 12 : -12);
-
-              ctx.beginPath();
-              ctx.moveTo(x1, y1);
-              ctx.lineTo(x2, y2);
-              ctx.lineTo(x3, y2);
-              ctx.stroke();
-
-              var percent = (value / total) * 100;
-              var label = chart.data.labels[index] + " " + formatInteger(value) + " (" + formatPercent(percent) + "%)";
-
-              ctx.textAlign = rightSide ? "left" : "right";
-              ctx.textBaseline = "middle";
-              ctx.fillText(label, x3 + (rightSide ? 3 : -3), y2);
-            });
-
-            ctx.restore();
-          }
-        };
+      function clearError() {
+        dom.error.textContent = "";
+        dom.error.style.display = "none";
       }
 
       function registerPlugins() {
-        if (pluginsRegistered || !window.Chart) {
+        if (pluginRegistered || !window.Chart) {
           return;
         }
-        window.Chart.defaults.color = THEME.axisText;
-        window.Chart.defaults.font.family = THEME.uiFont;
-        window.Chart.defaults.font.size = 12;
-        window.Chart.defaults.plugins.legend.labels.color = THEME.axisText;
-        window.Chart.register(buildValueLabelPlugin(), buildDonutLabelPlugin());
-        pluginsRegistered = true;
-      }
 
-      function buildLineChart(config) {
-        var canvas = document.getElementById("lineChart");
-        chartInstances.line = new window.Chart(canvas, {
-          type: "line",
-          data: {
-            labels: config.line.labels,
-            datasets: [
-              {
-                data: config.line.values,
-                borderColor: THEME.line,
-                backgroundColor: THEME.line,
-                borderWidth: 3,
-                tension: 0,
-                pointRadius: 4,
-                pointHoverRadius: 5,
-                pointStyle: "rect"
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            interaction: {
-              mode: "nearest",
-              intersect: false
-            },
-            layout: {
-              padding: {
-                top: 8,
-                right: 12,
-                left: 8,
-                bottom: 0
-              }
-            },
-            plugins: {
-              legend: {
-                display: false
-              },
-              tooltip: {
-                callbacks: {
-                  label: function (context) {
-                    return formatInteger(context.parsed.y);
-                  }
-                }
-              },
-              valueLabels: {
-                enabled: true,
-                mode: "line"
-              }
-            },
-            scales: {
-              x: {
-                ticks: {
-                  color: THEME.axisText,
-                  font: {
-                    size: 12,
-                    family: THEME.uiFont
-                  }
-                },
-                grid: {
-                  color: THEME.axisGrid,
-                  borderDash: [2, 4],
-                  drawBorder: false
-                },
-                border: {
-                  display: false
-                }
-              },
-              y: {
-                display: false,
-                beginAtZero: false
-              }
+        window.Chart.register({
+          id: "medianGuides",
+          afterDatasetsDraw: function (chart, args, pluginOptions) {
+            if (!pluginOptions || !Number.isFinite(pluginOptions.median)) {
+              return;
             }
+
+            var xScale = chart.scales.x;
+            var yScale = chart.scales.y;
+            if (!xScale || !yScale) {
+              return;
+            }
+
+            var xMed = xScale.getPixelForValue(pluginOptions.median);
+            var yHalf = yScale.getPixelForValue(0.5);
+            var yBottom = yScale.getPixelForValue(0);
+            var xZero = xScale.getPixelForValue(0);
+            var ctx = chart.ctx;
+
+            ctx.save();
+            ctx.strokeStyle = "#c62828";
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([6, 4]);
+
+            ctx.beginPath();
+            ctx.moveTo(xZero, yHalf);
+            ctx.lineTo(xMed, yHalf);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(xMed, yBottom);
+            ctx.lineTo(xMed, yHalf);
+            ctx.stroke();
+
+            ctx.setLineDash([]);
+            ctx.fillStyle = "#c62828";
+            ctx.font = "600 11px Amazon Ember, Segoe UI, Arial, sans-serif";
+            ctx.textAlign = "left";
+            ctx.textBaseline = "bottom";
+            ctx.fillText("Mediana: " + formatMedian(pluginOptions.median), xMed + 6, yHalf - 4);
+            ctx.restore();
           }
         });
-      }
 
-      function buildBarChart(config) {
-        var canvas = document.getElementById("barChart");
-        chartInstances.bars = new window.Chart(canvas, {
-          type: "bar",
-          data: {
-            labels: config.bars.labels,
-            datasets: [
-              {
-                label: "Masculino",
-                data: config.bars.first,
-                backgroundColor: THEME.male,
-                borderRadius: 0,
-                borderSkipped: false
-              },
-              {
-                label: "Femenino",
-                data: config.bars.second,
-                backgroundColor: THEME.female,
-                borderRadius: 0,
-                borderSkipped: false
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            layout: {
-              padding: {
-                top: 14,
-                right: 8,
-                left: 8,
-                bottom: 0
-              }
-            },
-            plugins: {
-              legend: {
-                display: false
-              },
-              tooltip: {
-                callbacks: {
-                  label: function (context) {
-                    return context.dataset.label + ": " + formatInteger(context.parsed.y);
-                  }
-                }
-              },
-              valueLabels: {
-                enabled: true,
-                mode: "bar",
-                font: "600 11px " + THEME.numFont
-              }
-            },
-            scales: {
-              x: {
-                stacked: false,
-                ticks: {
-                  color: THEME.axisText,
-                  maxRotation: 0,
-                  minRotation: 0,
-                  font: {
-                    size: 12,
-                    family: THEME.uiFont
-                  }
-                },
-                grid: {
-                  display: false
-                },
-                border: {
-                  display: false
-                }
-              },
-              y: {
-                display: false,
-                beginAtZero: true
-              }
-            }
-          }
-        });
-      }
-
-      function buildDonutChart(config) {
-        var canvas = document.getElementById("donutChart");
-        chartInstances.donut = new window.Chart(canvas, {
-          type: "doughnut",
-          data: {
-            labels: config.donut.labels,
-            datasets: [
-              {
-                data: config.donut.values,
-                backgroundColor: config.donut.colors,
-                borderWidth: 0,
-                hoverOffset: 2
-              }
-            ]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            animation: false,
-            cutout: "60%",
-            layout: {
-              padding: {
-                top: 24,
-                right: 66,
-                left: 66,
-                bottom: 24
-              }
-            },
-            plugins: {
-              legend: {
-                display: false
-              },
-              tooltip: {
-                callbacks: {
-                  label: function (context) {
-                    var values = context.dataset.data;
-                    var total = values.reduce(function (sum, current) {
-                      return sum + current;
-                    }, 0);
-                    var currentValue = Number(context.parsed) || 0;
-                    var pct = total ? (currentValue / total) * 100 : 0;
-                    return context.label + ": " + formatInteger(currentValue) + " (" + formatPercent(pct) + "%)";
-                  }
-                }
-              },
-              donutOutLabels: {
-                enabled: true
-              }
-            }
-          }
-        });
+        pluginRegistered = true;
       }
 
       async function ensureChartJs() {
         if (window.Chart) {
           return;
         }
+
         await new Promise(function (resolve, reject) {
           var script = document.createElement("script");
           script.src = "https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js";
@@ -1300,29 +754,124 @@
         });
       }
 
-      async function renderCharts(config) {
-        destroyCharts();
-
-        try {
-          await ensureChartJs();
-          registerPlugins();
-          buildLineChart(config);
-          buildBarChart(config);
-          buildDonutChart(config);
-        } catch (error) {
-          showChartError("lineChart", "No se pudo cargar Chart.js desde CDN.");
-          showChartError("barChart", "No se pudo cargar Chart.js desde CDN.");
-          showChartError("donutChart", "No se pudo cargar Chart.js desde CDN.");
+      function destroyChart() {
+        if (chartInstance) {
+          chartInstance.destroy();
+          chartInstance = null;
         }
+      }
+
+      function renderCurve(config) {
+        destroyChart();
+        clearError();
+
+        if (!config.points || config.points.length < 2) {
+          showError("No hay datos validos para dibujar la curva.");
+          return;
+        }
+
+        chartInstance = new window.Chart(dom.canvas, {
+          type: "line",
+          data: {
+            datasets: [
+              {
+                label: "S(t)",
+                data: config.points,
+                borderColor: "#313286",
+                backgroundColor: "#313286",
+                borderWidth: 3,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                stepped: "after",
+                tension: 0
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            parsing: true,
+            plugins: {
+              legend: {
+                display: false
+              },
+              tooltip: {
+                callbacks: {
+                  title: function (items) {
+                    return "Meses: " + formatMedian(items[0].parsed.x);
+                  },
+                  label: function (context) {
+                    return "S(t): " + new Intl.NumberFormat("es-ES", {
+                      minimumFractionDigits: 3,
+                      maximumFractionDigits: 3
+                    }).format(context.parsed.y);
+                  }
+                }
+              },
+              medianGuides: {
+                median: config.median
+              }
+            },
+            scales: {
+              x: {
+                type: "linear",
+                title: {
+                  display: true,
+                  text: "Meses de supervivencia",
+                  color: "#5d5d5d",
+                  font: {
+                    family: "Amazon Ember, Segoe UI, Arial, sans-serif",
+                    weight: "700"
+                  }
+                },
+                ticks: {
+                  color: "#5d5d5d"
+                },
+                grid: {
+                  color: "#d0d0d0",
+                  borderDash: [2, 4]
+                }
+              },
+              y: {
+                min: 0,
+                max: 1,
+                title: {
+                  display: true,
+                  text: "Probabilidad de supervivencia",
+                  color: "#5d5d5d",
+                  font: {
+                    family: "Amazon Ember, Segoe UI, Arial, sans-serif",
+                    weight: "700"
+                  }
+                },
+                ticks: {
+                  color: "#5d5d5d"
+                },
+                grid: {
+                  color: "#d0d0d0",
+                  borderDash: [2, 4]
+                }
+              }
+            }
+          }
+        });
       }
 
       async function init() {
         var params = readQueryParams();
         var config = buildConfigFromQuery(params);
 
-        renderKpis(config);
-        await renderCharts(config);
-      }
+        setMeta(config);
+
+        try {
+          await ensureChartJs();
+          registerPlugins();
+          renderCurve(config);
+        } catch (error) {
+          showError("No se pudo cargar Chart.js desde CDN.");
+        }
+}
 
       init();
     })();
