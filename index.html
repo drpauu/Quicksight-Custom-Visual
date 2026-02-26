@@ -260,7 +260,7 @@
       }
 
       // Demo filters accepted directly from QuickSight URL params:
-      // sexo (All/M/F), edadmin (min), edadmax (max), demomodo (1/0).
+      // sexo (All/M/F), edadmin (min), edadmax (max).
 
       function normalizeText(input, fallback) {
         if (input === null || input === undefined) {
@@ -416,17 +416,6 @@
           return "F";
         }
         return "ALL";
-      }
-
-      function isDemoModeEnabled(params) {
-        var raw = normalizeText(getFirstParamValue(params, ["demomodo", "demomode", "mockmode"]), "1").toLowerCase();
-        return raw !== "0" && raw !== "false" && raw !== "off";
-      }
-
-      function hasPrecomputedCurveParams(params) {
-        var timeRaw = getFirstParamValue(params, ["kmtiempo", "tiempokm"]);
-        var survRaw = getFirstParamValue(params, ["kmsupervivencia", "kmsurv", "supervivenciakm"]);
-        return !!(timeRaw && survRaw);
       }
 
       // Hardcoded synthetic table (fixed cohort) for demo without backend.
@@ -855,8 +844,8 @@
 
       // Render switching logic:
       // - If raw rows arrive in URL, curve is computed inside the visual.
-      // - If not, demo mode can generate an embedded filtered cohort (sexo/edadmin/edadmax).
-      // - If demo mode is disabled, visual reads a pre-aggregated KM curve.
+      // - If not, visual always uses the hardcoded synthetic cohort filtered by sexo/edadmin/edadmax.
+      // - Precomputed curve params are only a fallback if synthetic filtering returns no rows.
       function buildConfigFromQuery(params) {
         var rawRows = readRawRowsFromJson(params);
         if (!rawRows.length) {
@@ -871,17 +860,11 @@
           }
         }
 
-        if (hasPrecomputedCurveParams(params)) {
-          return readPrecomputedCurve(params);
-        }
-
-        if (isDemoModeEnabled(params)) {
-          var demoRows = getDemoFilteredRows(params);
-          var demoPatients = collapseRowsByPatient(demoRows);
-          var demoComputed = computeKaplanMeierFromPatients(demoPatients);
-          if (demoComputed) {
-            return demoComputed;
-          }
+        var demoRows = getDemoFilteredRows(params);
+        var demoPatients = collapseRowsByPatient(demoRows);
+        var demoComputed = computeKaplanMeierFromPatients(demoPatients);
+        if (demoComputed) {
+          return demoComputed;
         }
 
         return readPrecomputedCurve(params);
