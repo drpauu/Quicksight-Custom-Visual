@@ -187,7 +187,7 @@
   <main class="app">
     <section class="panel">
       <header class="panel-head">
-        <h1 class="title">Curva de Supervivencia - Kaplan Meier</h1>
+        <h1 class="title">CURVA DE KAPLAN-MEIER</h1>
       </header>
       <div class="canvas-wrap">
         <canvas id="kmChart" aria-label="Curva Kaplan Meier" role="img"></canvas>
@@ -648,7 +648,7 @@
         return value;
       }
 
-      function buildRiskTable(points, timeline, totalPatients) {
+      function buildRiskTable(points, timeline, totalPatients, patients) {
         var maxObserved = 0;
         for (var i = 0; i < points.length; i += 1) {
           if (points[i].x > maxObserved) {
@@ -666,6 +666,50 @@
         var censored = [];
         var survival = [];
 
+        // Preferred mode (demo/raw rows): interval table like the reference visual.
+        if (Array.isArray(patients) && patients.length) {
+          for (var p = 0; p < ticks.length; p += 1) {
+            var tickStart = ticks[p];
+            var tickEnd = tickStart + 6;
+            var atRiskCount = 0;
+            var eventsCount = 0;
+            var censCount = 0;
+
+            for (var r = 0; r < patients.length; r += 1) {
+              var row = patients[r];
+              if (!Number.isFinite(row.meses)) {
+                continue;
+              }
+
+              if (row.meses >= tickStart) {
+                atRiskCount += 1;
+              }
+
+              if (row.meses >= tickStart && row.meses < tickEnd) {
+                if (row.evento === 1) {
+                  eventsCount += 1;
+                } else {
+                  censCount += 1;
+                }
+              }
+            }
+
+            atRisk.push(atRiskCount);
+            events.push(eventsCount);
+            censored.push(censCount);
+            survival.push(getSurvivalAtMonth(points, tickStart));
+          }
+
+          return {
+            ticks: ticks,
+            atRisk: atRisk,
+            events: events,
+            censored: censored,
+            survival: survival
+          };
+        }
+
+        // Fallback mode (precomputed curves): infer a simplified table from timeline.
         for (var k = 0; k < ticks.length; k += 1) {
           var tick = ticks[k];
           var state = {
@@ -766,7 +810,7 @@
           }
         }
 
-        var risk = buildRiskTable(points, timeline, patients.length);
+        var risk = buildRiskTable(points, timeline, patients.length, patients);
 
         return {
           points: points,
