@@ -6,14 +6,16 @@
   <title>QuickSight Custom Visual - Kaplan Meier</title>
   <style>
     :root {
-      --bg: #ededed;
-      --panel-bg: #efefef;
-      --ink: #2e3188;
-      --text: #4c4c4c;
-      --muted: #676767;
-      --line: #313286;
-      --median: #c62828;
-      --grid: #d0d0d0;
+      --color-primary: #2E2A78;
+      --color-secondary-analytic: #343087;
+      --color-success: #3FAE9F;
+      --color-warning: #F57C00;
+      --color-danger: #E07BAA;
+      --color-neutral: #9A978B;
+      --color-bg: #E9E4DC;
+      --color-grid: #D8D2C8;
+      --color-text-secondary: #6E6E6E;
+      --color-panel: #FFFFFF;
       --ui-font: "Amazon Ember", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     }
 
@@ -26,8 +28,8 @@
       margin: 0;
       width: 100%;
       height: 100%;
-      background: var(--bg);
-      color: var(--text);
+      background: var(--color-bg);
+      color: var(--color-text-secondary);
       font-family: var(--ui-font);
     }
 
@@ -50,8 +52,8 @@
       min-height: 0;
       display: flex;
       flex-direction: column;
-      background: #ffffff;
-      border: 1px solid #d7d7d7;
+      background: var(--color-panel);
+      border: 1px solid var(--color-grid);
       border-radius: 4px;
       padding: 8px 10px 10px;
       gap: 6px;
@@ -66,7 +68,7 @@
 
     .title {
       margin: 0;
-      color: #333333;
+      color: var(--color-primary);
       font-size: clamp(0.86rem, 1.1vw, 1.02rem);
       font-weight: 700;
       letter-spacing: 0.01em;
@@ -78,9 +80,9 @@
       width: 100%;
       position: relative;
       height: clamp(250px, 52vh, 480px);
-      border: 1px solid #ebebeb;
+      border: 1px solid var(--color-grid);
       padding: 4px 2px 2px;
-      background: #fcfcfc;
+      background: var(--color-panel);
     }
 
     .kpi-strip {
@@ -96,12 +98,12 @@
       align-items: center;
       justify-content: center;
       min-height: 36px;
-      border-top: 1px solid #e6e6e6;
+      border-top: 1px solid var(--color-grid);
       padding-top: 3px;
     }
 
     .kpi-label {
-      color: #6f6f6f;
+      color: var(--color-text-secondary);
       font-size: 0.66rem;
       font-weight: 600;
       line-height: 1.1;
@@ -109,7 +111,7 @@
     }
 
     .kpi-value {
-      color: #333333;
+      color: var(--color-primary);
       font-size: 0.9rem;
       font-weight: 700;
       line-height: 1.1;
@@ -119,7 +121,7 @@
 
     .risk-wrap {
       overflow-x: auto;
-      border-top: 1px solid #e6e6e6;
+      border-top: 1px solid var(--color-grid);
       padding-top: 4px;
     }
 
@@ -127,13 +129,13 @@
       width: 100%;
       border-collapse: collapse;
       font-size: 0.69rem;
-      color: #2f2f2f;
+      color: var(--color-text-secondary);
       table-layout: fixed;
     }
 
     .risk-table th,
     .risk-table td {
-      border: 1px solid #e7e7e7;
+      border: 1px solid var(--color-grid);
       padding: 2px 4px;
       text-align: center;
       white-space: nowrap;
@@ -141,15 +143,16 @@
     }
 
     .risk-table thead th {
-      background: #f3f3f3;
+      background: var(--color-bg);
       font-weight: 700;
-      color: #555555;
+      color: var(--color-primary);
     }
 
     .risk-table .row-label {
       text-align: left;
       font-weight: 700;
-      background: #fafafa;
+      background: var(--color-bg);
+      color: var(--color-primary);
     }
 
     canvas {
@@ -160,7 +163,7 @@
 
     .chart-error {
       margin: 0;
-      color: #8b1d1d;
+      color: var(--color-danger);
       font-size: 0.95rem;
       text-align: center;
       padding: 4px;
@@ -1056,9 +1059,11 @@
             var yBottom = yScale.getPixelForValue(0);
             var xZero = xScale.getPixelForValue(0);
             var ctx = chart.ctx;
+            var rootStyles = getComputedStyle(document.documentElement);
+            var medianColor = rootStyles.getPropertyValue("--color-warning").trim() || "#F57C00";
 
             ctx.save();
-            ctx.strokeStyle = "#c62828";
+            ctx.strokeStyle = medianColor;
             ctx.lineWidth = 1.5;
             ctx.setLineDash([6, 4]);
 
@@ -1073,7 +1078,7 @@
             ctx.stroke();
 
             ctx.setLineDash([]);
-            ctx.fillStyle = "#c62828";
+            ctx.fillStyle = medianColor;
             ctx.font = "600 11px Amazon Ember, Segoe UI, Arial, sans-serif";
             ctx.textAlign = "left";
             ctx.textBaseline = "bottom";
@@ -1120,6 +1125,11 @@
         if (config.risk && Array.isArray(config.risk.ticks) && config.risk.ticks.length) {
           maxX = config.risk.ticks[config.risk.ticks.length - 1];
         }
+        var rootStyles = getComputedStyle(document.documentElement);
+        var curveColor = rootStyles.getPropertyValue("--color-secondary-analytic").trim() || "#343087";
+        var axisTitleColor = rootStyles.getPropertyValue("--color-primary").trim() || "#2E2A78";
+        var axisTickColor = rootStyles.getPropertyValue("--color-text-secondary").trim() || "#6E6E6E";
+        var gridColor = rootStyles.getPropertyValue("--color-grid").trim() || "#D8D2C8";
 
         chartInstance = new window.Chart(dom.canvas, {
           type: "line",
@@ -1128,8 +1138,8 @@
               {
                 label: "S(t)",
                 data: config.points,
-                borderColor: "#313286",
-                backgroundColor: "#313286",
+                borderColor: curveColor,
+                backgroundColor: curveColor,
                 borderWidth: 3,
                 pointRadius: 0,
                 pointHoverRadius: 4,
@@ -1169,18 +1179,18 @@
                 title: {
                   display: true,
                   text: "Meses",
-                  color: "#5d5d5d",
+                  color: axisTitleColor,
                   font: {
                     family: "Amazon Ember, Segoe UI, Arial, sans-serif",
                     weight: "700"
                   }
                 },
                 ticks: {
-                  color: "#5d5d5d",
+                  color: axisTickColor,
                   stepSize: 10
                 },
                 grid: {
-                  color: "#d0d0d0",
+                  color: gridColor,
                   borderDash: [2, 4]
                 }
               },
@@ -1190,20 +1200,20 @@
                 title: {
                   display: true,
                   text: "Supervivencia",
-                  color: "#5d5d5d",
+                  color: axisTitleColor,
                   font: {
                     family: "Amazon Ember, Segoe UI, Arial, sans-serif",
                     weight: "700"
                   }
                 },
                 ticks: {
-                  color: "#5d5d5d",
+                  color: axisTickColor,
                   callback: function (value) {
                     return String(Math.round(Number(value) * 100)) + "%";
                   }
                 },
                 grid: {
-                  color: "#d0d0d0",
+                  color: gridColor,
                   borderDash: [2, 4]
                 }
               }
