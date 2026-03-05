@@ -224,7 +224,281 @@
     </section>
   </main>
 
+  <script id="kaplan-meier-python-embedded" type="text/python">
+import json
+
+
+def _to_float(value, default=None):
+    if value is None:
+        return default
+    if isinstance(value, (int, float)):
+        return float(value)
+    text = str(value).strip()
+    if not text:
+        return default
+    text = text.replace(" ", "")
+    if text.count(",") > 0 and text.count(".") > 0:
+        if text.rfind(",") > text.rfind("."):
+            text = text.replace(".", "").replace(",", ".")
+        else:
+            text = text.replace(",", "")
+    elif "," in text:
+        text = text.replace(",", ".")
+    try:
+        return float(text)
+    except Exception:
+        return default
+
+
+def _to_event(value):
+    parsed = _to_float(value, 0.0)
+    return 1 if parsed and parsed > 0 else 0
+
+
+def _clean_row(raw, idx):
+    cic = str(
+        raw.get("cic")
+        or raw.get("CIC")
+        or raw.get("codigopaciente")
+        or raw.get("CODIGOPACIENTE")
+        or ("p" + str(idx + 1))
+    ).strip() or ("p" + str(idx + 1))
+    meses_raw = (
+        raw.get("meses")
+        if "meses" in raw
+        else raw.get("mesessupervivencia")
+        or raw.get("meses_supervivencia")
+        or raw.get("MESES_SUPERVIVENCIA")
+    )
+    evento_raw = (
+        raw.get("evento")
+        if "evento" in raw
+        else raw.get("exituscorte")
+        or raw.get("exitus_corte")
+        or raw.get("EXITUS_CORTE")
+    )
+    meses = _to_float(meses_raw, None)
+    if meses is None or meses < 0:
+        return None
+    return {"cic": cic, "meses": meses, "evento": _to_event(evento_raw)}
+
+
+def _collapse_patients(rows):
+    grouped = {}
+    for i, row in enumerate(rows):
+        current = _clean_row(row, i)
+        if current is None:
+            continue
+        key = current["cic"]
+        if key not in grouped:
+            grouped[key] = current
+            continue
+        if current["meses"] > grouped[key]["meses"]:
+            grouped[key]["meses"] = current["meses"]
+        if current["evento"] > grouped[key]["evento"]:
+            grouped[key]["evento"] = current["evento"]
+    return list(grouped.values())
+
+
+def _survival_at(points, month):
+    value = 1.0
+    for point in points:
+        if point["x"] <= month:
+            value = point["y"]
+        else:
+            break
+    return value
+
+
+def _median(points):
+    for point in points:
+        if point["y"] <= 0.5:
+            return point["x"]
+    return None
+
+
+def _build_risk_table(points, timeline, total_patients, patients):
+    max_observed = 0.0
+    for point in points:
+        if point["x"] > max_observed:
+            max_observed = point["x"]
+    max_month = max(60, int(((max_observed + 5) // 6) * 6))
+    ticks = list(range(0, max_month + 1, 6))
+
+    at_risk = []
+    events = []
+    censored = []
+    survival = []
+
+    if patients:
+        for tick in ticks:
+            tick_end = tick + 6
+            at_risk_count = 0
+            events_count = 0
+            censored_count = 0
+            for row in patients:
+                meses = row.get("meses")
+                if meses is None:
+                    continue
+                if meses >= tick:
+                    at_risk_count += 1
+                if meses >= tick and meses < tick_end:
+                    if row.get("evento", 0) == 1:
+                        events_count += 1
+                    else:
+                        censored_count += 1
+            at_risk.append(at_risk_count)
+            events.append(events_count)
+            censored.append(censored_count)
+            survival.append(_survival_at(points, tick))
+    else:
+        for tick in ticks:
+            state = {
+                "atRisk": total_patients,
+                "events": 0,
+                "censored": 0,
+                "survival": _survival_at(points, tick)
+            }
+            for item in timeline:
+                if item["time"] <= tick:
+                    state["atRisk"] = item["atRisk"]
+                    state["events"] = item["eventsCum"]
+                    state["censored"] = item["censoredCum"]
+                    state["survival"] = item["survival"]
+                else:
+                    break
+            at_risk.append(state["atRisk"])
+            events.append(state["events"])
+            censored.append(state["censored"])
+            survival.append(state["survival"])
+
+    return {
+        "ticks": ticks,
+        "atRisk": at_risk,
+        "events": events,
+        "censored": censored,
+        "survival": survival
+    }
+
+
+def _compute_from_patients(patients):
+    if not patients:
+        return None
+    by_time = {}
+    total_events = 0
+    total_censored = 0
+    for row in patients:
+        time = row["meses"]
+        key = str(time)
+        if key not in by_time:
+            by_time[key] = {"time": time, "events": 0, "censored": 0}
+        if row["evento"] == 1:
+            by_time[key]["events"] += 1
+            total_events += 1
+        else:
+            by_time[key]["censored"] += 1
+            total_censored += 1
+
+    ordered_times = sorted([item["time"] for item in by_time.values()])
+    n_at_risk = len(patients)
+    surv = 1.0
+    points = [{"x": 0.0, "y": 1.0}]
+    timeline = []
+    cumulative_events = 0
+    cumulative_censored = 0
+
+    for time in ordered_times:
+        bucket = by_time[str(time)]
+        d_t = bucket["events"]
+        c_t = bucket["censored"]
+        at_risk_before = n_at_risk
+        cumulative_events += d_t
+        cumulative_censored += c_t
+        if n_at_risk > 0 and d_t > 0:
+            surv = surv * (1.0 - d_t / n_at_risk)
+        points.append({"x": float(time), "y": float(surv)})
+        timeline.append({
+            "time": float(time),
+            "atRisk": int(at_risk_before),
+            "eventsCum": int(cumulative_events),
+            "censoredCum": int(cumulative_censored),
+            "survival": float(surv)
+        })
+        n_at_risk -= (d_t + c_t)
+        if n_at_risk < 0:
+            n_at_risk = 0
+
+    risk = _build_risk_table(points, timeline, len(patients), patients)
+    return {
+        "points": points,
+        "timeline": timeline,
+        "risk": risk,
+        "totalPatients": len(patients),
+        "totalEvents": total_events,
+        "totalCensored": total_censored,
+        "median": _median(points),
+        "surv12": _survival_at(points, 12),
+        "surv24": _survival_at(points, 24)
+    }
+
+
+def _from_precomputed(precomputed):
+    points = precomputed.get("points", []) if isinstance(precomputed, dict) else []
+    clean_points = []
+    for pair in points:
+        x = _to_float(pair.get("x") if isinstance(pair, dict) else None, None)
+        y = _to_float(pair.get("y") if isinstance(pair, dict) else None, None)
+        if x is None or y is None or x < 0:
+            continue
+        if y < 0:
+            y = 0
+        if y > 1:
+            y = 1
+        clean_points.append({"x": x, "y": y})
+    clean_points.sort(key=lambda p: p["x"])
+    if not clean_points:
+        clean_points = [{"x": 0.0, "y": 1.0}, {"x": 30.0, "y": 0.49}]
+    elif clean_points[0]["x"] > 0:
+        clean_points.insert(0, {"x": 0.0, "y": 1.0})
+
+    total_patients = int(_to_float(precomputed.get("totalPatients"), 0)) if isinstance(precomputed, dict) else 0
+    total_events = int(_to_float(precomputed.get("totalEvents"), 0)) if isinstance(precomputed, dict) else 0
+    total_censored = int(_to_float(precomputed.get("totalCensored"), 0)) if isinstance(precomputed, dict) else 0
+    if total_censored <= 0:
+        total_censored = max(0, total_patients - total_events)
+    risk = _build_risk_table(clean_points, [], total_patients, [])
+    return {
+        "points": clean_points,
+        "timeline": [],
+        "risk": risk,
+        "totalPatients": total_patients,
+        "totalEvents": total_events,
+        "totalCensored": total_censored,
+        "median": _median(clean_points),
+        "surv12": _survival_at(clean_points, 12),
+        "surv24": _survival_at(clean_points, 24)
+    }
+
+
+def compute_km_visual(raw_rows, precomputed):
+    rows = raw_rows if isinstance(raw_rows, list) else []
+    patients = _collapse_patients(rows)
+    if patients:
+        return _compute_from_patients(patients)
+    return _from_precomputed(precomputed if isinstance(precomputed, dict) else {})
+
+
+def compute_km_visual_json(raw_rows, precomputed):
+    return json.dumps(compute_km_visual(raw_rows, precomputed))
+  </script>
+
   <script>
+    /*
+      Flujo actual:
+      - El bloque Python embebido (type="text/python") define el calculo KM.
+      - JS carga Pyodide y ejecuta ese Python para obtener points/risk/metricas.
+      - Chart.js solo renderiza.
+    */
     (function () {
       "use strict";
 
@@ -245,6 +519,9 @@
 
       var chartInstance = null;
       var pluginRegistered = false;
+      var pyodideInstance = null;
+      var pyodideBootPromise = null;
+      var pythonKernelReady = false;
 
       var dom = {
         canvas: document.getElementById("kmChart"),
@@ -1105,6 +1382,85 @@
         });
       }
 
+      async function ensurePyodideRuntime() {
+        if (pyodideInstance) {
+          return pyodideInstance;
+        }
+        if (pyodideBootPromise) {
+          return pyodideBootPromise;
+        }
+
+        pyodideBootPromise = new Promise(function (resolve, reject) {
+          if (window.loadPyodide) {
+            resolve();
+            return;
+          }
+          var script = document.createElement("script");
+          script.src = "https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js";
+          script.async = true;
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        }).then(async function () {
+          pyodideInstance = await window.loadPyodide({
+            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.27.2/full/"
+          });
+          return pyodideInstance;
+        });
+
+        return pyodideBootPromise;
+      }
+
+      async function ensureEmbeddedPythonLoaded() {
+        var py = await ensurePyodideRuntime();
+        if (pythonKernelReady) {
+          return py;
+        }
+        var codeNode = document.getElementById("kaplan-meier-python-embedded");
+        if (!codeNode || !codeNode.textContent) {
+          throw new Error("No se encontro el bloque Python embebido.");
+        }
+        py.runPython(codeNode.textContent);
+        pythonKernelReady = true;
+        return py;
+      }
+
+      async function computeConfigWithEmbeddedPython(rawRows, precomputed) {
+        var py = await ensureEmbeddedPythonLoaded();
+        py.globals.set("km_input_rows", rawRows || []);
+        py.globals.set("km_input_precomputed", precomputed || {});
+
+        try {
+          var resultJson = py.runPython(
+            "compute_km_visual_json(km_input_rows, km_input_precomputed)"
+          );
+          return JSON.parse(String(resultJson));
+        } finally {
+          py.globals.set("km_input_rows", null);
+          py.globals.set("km_input_precomputed", null);
+        }
+      }
+
+      async function buildConfigFromQueryUsingPython(params) {
+        var rawRows = readRawRowsFromJson(params);
+        if (!rawRows.length) {
+          rawRows = readRawRowsFromColumns(params);
+        }
+        if (!rawRows.length) {
+          rawRows = getDemoFilteredRows(params);
+        }
+
+        var precomputedCurve = readPrecomputedCurve(params);
+        var precomputedPayload = {
+          points: precomputedCurve.points || [],
+          totalPatients: precomputedCurve.totalPatients || 0,
+          totalEvents: precomputedCurve.totalEvents || 0,
+          totalCensored: precomputedCurve.totalCensored || 0
+        };
+
+        return computeConfigWithEmbeddedPython(rawRows, precomputedPayload);
+      }
+
       function destroyChart() {
         if (chartInstance) {
           chartInstance.destroy();
@@ -1224,7 +1580,13 @@
 
       async function init() {
         var params = readQueryParams();
-        var config = normalizeCurveConfig(buildConfigFromQuery(params));
+        var config = null;
+
+        try {
+          config = normalizeCurveConfig(await buildConfigFromQueryUsingPython(params));
+        } catch (pythonError) {
+          config = normalizeCurveConfig(buildConfigFromQuery(params));
+        }
 
         setMeta(config);
         renderRiskTable(config);
